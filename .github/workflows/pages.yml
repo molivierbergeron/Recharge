@@ -1,12 +1,13 @@
 name: Déploiement GitHub Pages
 
 # GitHub Pages sert la branche `gh-pages`. Ce workflow y republie le site à
-# chaque push sur la branche par défaut.
+# chaque push sur `main` ou sur une branche de travail `claude/*`, de sorte que
+# le site en ligne suive la branche réellement utilisée.
 on:
   push:
     branches:
-      - claude/polestar-charge-estimator-pp0lsk
       - main
+      - 'claude/**'
   workflow_dispatch:
 
 permissions:

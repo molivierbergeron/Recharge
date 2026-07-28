@@ -100,6 +100,10 @@ Viser plus de 90 % sur une borne rapide déclenche un avertissement — tarifica
 vitesse réduite à ~12 kW. L'app affiche le temps jusqu'à 90 % comme recommandation, le surcoût
 90 → cible séparément, et un bouton pour ramener la cible à 90 %. Elle informe, elle ne bloque pas.
 
+Quand le départ est *déjà* au-dessus de 90 %, la recommandation « jusqu'à 90 % » n'a plus de sens :
+l'avertissement reste affiché, mais il rappelle plutôt que toute la session se joue au débit réduit
+et qu'une borne de niveau 2 ferait le même travail.
+
 ## Configuration
 
 Tout est éditable et conservé dans `localStorage` : capacité, chargeur embarqué, pertes AC/DC, table
@@ -118,9 +122,10 @@ les fichiers en cache, l'app fonctionne ensuite hors ligne.
 Rien à construire : le site *est* le contenu du dépôt.
 
 GitHub Pages sert la branche `gh-pages`, et le workflow `.github/workflows/pages.yml` y republie la
-racine à chaque push sur la branche par défaut, en commit orphelin. `.github` est retiré du site
-publié — le jeton du workflow n'a pas le droit d'écrire des fichiers de workflow sur une autre
-branche, et le site n'en a pas besoin.
+racine en commit orphelin à chaque push sur `main` ou sur une branche de travail `claude/*` — le
+dépôt n'a pas encore de branche par défaut, et le site doit suivre la branche réellement utilisée.
+`.github` est retiré du site publié : le jeton du workflow n'a pas le droit d'écrire des fichiers de
+workflow sur une autre branche, et le site n'en a pas besoin.
 
 Le service worker sert le cache d'abord et le rafraîchit en arrière-plan : après un déploiement, la
 nouvelle version apparaît au chargement suivant. Pour qu'elle s'applique immédiatement, incrémenter

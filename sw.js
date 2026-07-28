@@ -1,6 +1,6 @@
 /* Service worker minimal : l'app doit fonctionner hors ligne une fois installée.
    Bump CACHE à chaque déploiement pour forcer la mise à jour. */
-const CACHE = 'recharge-v1';
+const CACHE = 'recharge-v2';
 
 const ASSETS = [
   './',
