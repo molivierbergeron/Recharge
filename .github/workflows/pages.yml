@@ -1,0 +1,41 @@
+name: Déploiement GitHub Pages
+
+# Le site est publié à chaque push sur la branche par défaut.
+# `enablement: true` active GitHub Pages au premier passage : rien à cliquer.
+on:
+  push:
+    branches:
+      - claude/polestar-charge-estimator-pp0lsk
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un seul déploiement à la fois, sans annuler celui qui est en cours.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Le site est statique : la racine du dépôt est publiée telle quelle.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
