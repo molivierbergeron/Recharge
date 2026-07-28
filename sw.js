@@ -1,7 +1,5 @@
-/* Service worker minimal : l'app doit fonctionner hors ligne une fois installée.
-   Bump CACHE à chaque déploiement pour forcer la mise à jour. */
+/* Service worker minimal — permet l'usage hors ligne une fois l'app installée. */
 const CACHE = 'recharge-v1';
-
 const ASSETS = [
   './',
   './index.html',
@@ -14,7 +12,7 @@ const ASSETS = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(ASSETS))
+      .then(c => Promise.all(ASSETS.map(u => c.add(u).catch(() => null))))
       .then(() => self.skipWaiting())
   );
 });
@@ -27,21 +25,19 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Cache d'abord, rafraîchi en arrière-plan : ouverture instantanée et hors ligne fiable.
+// Cache d'abord, rafraîchissement en arrière-plan : instantané hors ligne,
+// et la prochaine ouverture prend la version à jour.
 self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-
+  if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(req).then(hit => {
-      const net = fetch(req).then(res => {
-        if (res && res.ok) {
+    caches.match(e.request).then(hit => {
+      const net = fetch(e.request).then(res => {
+        if (res && res.ok && res.type === 'basic'){
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
+          caches.open(CACHE).then(c => c.put(e.request, copy));
         }
         return res;
       }).catch(() => hit);
-
       return hit || net;
     })
   );
