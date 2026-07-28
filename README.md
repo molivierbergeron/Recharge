@@ -110,6 +110,10 @@ Tout est éditable et conservé dans `localStorage` : capacité, chargeur embarq
 des bornes, les 7 segments de la courbe DC, facteurs et plafonds de température, seuil
 d'avertissement. Export et import JSON, et remise aux défauts.
 
+Un fichier importé ne remplace que les valeurs numériques connues, jamais la structure, et chaque
+valeur est bornée aux mêmes limites que le champ correspondant : un JSON modifié à la main ne peut
+pas installer une configuration que la page de configuration elle-même refuserait.
+
 ## En ligne
 
 **https://molivierbergeron.github.io/Recharge/**

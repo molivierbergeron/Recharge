@@ -16,6 +16,9 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   :root{
+    /* Palette claire assumée : sans cela, iOS en mode sombre réhabille les champs
+       de la page de configuration et le curseur de saisie en foncé sur fond clair. */
+    color-scheme:light;
     --bg:#FAFAF8;
     --ink:#1A1A1A;
     --muted:#6E6E68;
@@ -433,37 +436,50 @@ function loadConfig(){
   return cfg;
 }
 
-// Fusion prudente : on ne reprend que les valeurs numériques connues, jamais la structure
+// Fusion prudente : on ne reprend que les valeurs numériques connues, jamais la structure.
+// Chaque valeur est bornée aux mêmes limites que les champs de la page de configuration —
+// un fichier importé à la main, ou un stockage local d'une version antérieure, ne doit pas
+// pouvoir installer une configuration que l'interface elle-même refuserait.
 function mergeConfig(cfg, raw){
   if (raw.battery){
-    ['usableKwh','onboardAcKw','acLoss','dcLoss'].forEach(k=>{
-      if (isNum(raw.battery[k])) cfg.battery[k] = raw.battery[k];
-    });
+    take(raw.battery, 'usableKwh',   10, 200, v => cfg.battery.usableKwh   = v);
+    take(raw.battery, 'onboardAcKw',  1,  30, v => cfg.battery.onboardAcKw = v);
+    take(raw.battery, 'acLoss',       0, 0.4, v => cfg.battery.acLoss      = v);
+    take(raw.battery, 'dcLoss',       0, 0.4, v => cfg.battery.dcLoss      = v);
   }
   if (Array.isArray(raw.curve)){
-    cfg.curve.forEach((seg,i)=>{ if (raw.curve[i] && isNum(raw.curve[i].kw)) seg.kw = raw.curve[i].kw; });
+    cfg.curve.forEach((seg,i)=>{
+      if (raw.curve[i]) take(raw.curve[i], 'kw', 1, 400, v => seg.kw = v);
+    });
   }
   if (Array.isArray(raw.presets)){
     cfg.presets.forEach(p=>{
       const r = raw.presets.find(x => x && x.id === p.id);
       if (!r) return;
-      if (isNum(r.kw)) p.kw = r.kw;
-      if (isNum(r.real)) p.real = r.real;
-      if (isNum(r.splitRatio)) p.splitRatio = r.splitRatio;
+      take(r, 'kw',         0.1, 400, v => p.kw         = v);
+      take(r, 'real',       0.1,   1, v => p.real       = v);
+      take(r, 'splitRatio', 0.1,   1, v => p.splitRatio = v);
     });
   }
   if (Array.isArray(raw.temps)){
     cfg.temps.forEach(t=>{
       const r = raw.temps.find(x => x && x.id === t.id);
       if (!r) return;
-      if (isNum(r.dcFactor)) t.dcFactor = r.dcFactor;
-      if (isNum(r.acFactor)) t.acFactor = r.acFactor;
-      if (isNum(r.dcCap)) t.dcCap = r.dcCap;
-      else if (r.dcCap === null) t.dcCap = null;
+      take(r, 'dcFactor', 0.1, 1, v => t.dcFactor = v);
+      take(r, 'acFactor', 0,   1, v => t.acFactor = v);
+      if (r.dcCap === null) t.dcCap = null;
+      else take(r, 'dcCap', 1, 400, v => t.dcCap = v);
     });
   }
-  if (isNum(raw.ceWarnSoc)) cfg.ceWarnSoc = raw.ceWarnSoc;
-  if (isNum(raw.preheatShift)) cfg.preheatShift = raw.preheatShift;
+  take(raw, 'ceWarnSoc',    50, 100, v => cfg.ceWarnSoc    = Math.round(v));
+  // Le décalage sert d'index dans la table des températures : hors bornes, il la ferait sortir.
+  take(raw, 'preheatShift',  0, cfg.temps.length - 1, v => cfg.preheatShift = Math.round(v));
+}
+
+// Applique raw[key] borné à [lo, hi] ; laisse la valeur par défaut si absente ou non numérique
+function take(raw, key, lo, hi, set){
+  const v = raw[key];
+  if (isNum(v)) set(Math.max(lo, Math.min(hi, v)));
 }
 
 function isNum(v){ return typeof v === 'number' && isFinite(v); }
@@ -610,6 +626,10 @@ let ui = {
   preheat: false
 };
 
+// Horodatage du dernier choix explicite de température (0 = jamais touché).
+// Déclaré avant la restauration : celle-ci doit pouvoir le réinstaller.
+let tempTouchedAt = 0;
+
 (function restoreUi(){
   let s;
   try { s = JSON.parse(localStorage.getItem(STORE_UI) || 'null'); } catch(e){ s = null; }
@@ -619,15 +639,17 @@ let ui = {
   if (cfg.presets.some(p => p.id === s.presetId)) ui.presetId = s.presetId;
   ui.split = !!s.split;
   ui.preheat = !!s.preheat;
-  // La température se repropose selon la saison si le choix mémorisé date de plus de 24 h
+  // La température se repropose selon la saison si le choix mémorisé date de plus de 24 h.
+  // L'horodatage est repris tel quel : la fenêtre de 24 h court depuis le choix lui-même,
+  // et non depuis la dernière ouverture de l'app. Sans cela, la première interaction venue
+  // réécrivait tempAt à 0 et le choix était perdu au chargement suivant.
   if (isNum(s.tempIdx) && s.tempIdx >= 0 && s.tempIdx < cfg.temps.length
       && isNum(s.tempAt) && (Date.now() - s.tempAt) < 24*3600*1000){
     ui.tempIdx = s.tempIdx;
+    tempTouchedAt = s.tempAt;
   }
   if (ui.to <= ui.from) ui.to = Math.min(100, ui.from + 1);
 })();
-
-let tempTouchedAt = 0;
 
 function saveUi(){
   try {
