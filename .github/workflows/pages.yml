@@ -1,7 +1,7 @@
 name: Déploiement GitHub Pages
 
-# Le site est publié à chaque push sur la branche par défaut.
-# `enablement: true` active GitHub Pages au premier passage : rien à cliquer.
+# GitHub Pages sert la branche `gh-pages`. Ce workflow y republie le site à
+# chaque push sur la branche par défaut.
 on:
   push:
     branches:
@@ -10,32 +10,36 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# Un seul déploiement à la fois, sans annuler celui qui est en cours.
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  publier:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      - name: Republier la racine sur gh-pages
+        run: |
+          set -euo pipefail
 
-      # Le site est statique : la racine du dépôt est publiée telle quelle.
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
+          # `.github` est retiré du site publié : le jeton du workflow n'a pas
+          # le droit d'écrire des fichiers de workflow sur une autre branche,
+          # et le site n'en a aucun besoin.
+          rm -rf .github
 
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          # Pas de Jekyll : le site est déjà du HTML statique.
+          touch .nojekyll
+
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # Un commit orphelin par déploiement : gh-pages reste un miroir du
+          # site, sans traîner l'historique du dépôt.
+          git checkout --orphan deploiement
+          git add -A
+          git commit -m "Déploiement de ${GITHUB_SHA:0:7}"
+          git push --force origin deploiement:refs/heads/gh-pages
