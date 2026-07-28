@@ -187,7 +187,7 @@
   .bands{margin-top:20px}
   .bands h4{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 8px}
   .band{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--line)}
-  .band-r{width:74px;flex:0 0 auto;color:var(--muted)}
+  .band-r{width:86px;flex:0 0 auto;color:var(--muted);white-space:nowrap}
   .band-bar{flex:1 1 auto;height:2px;background:var(--line)}
   .band-bar i{display:block;height:2px;background:var(--ink)}
   .band-t{width:62px;flex:0 0 auto;text-align:right}
@@ -737,22 +737,30 @@ function renderResult(){
 
   let html = '';
 
-  // Règle Circuit électrique au-delà du seuil
+  // Règle Circuit électrique au-delà du seuil.
+  // L'avertissement vaut dès que la cible dépasse le seuil — y compris quand le départ
+  // est déjà au-dessus, où la recommandation « jusqu'à 90 % » n'aurait plus de sens.
   const limit = cfg.ceWarnSoc;
-  if (p.ceFast && ui.to > limit && ui.from < limit){
-    const simTo90 = simulate(ui.from, limit, p, ui.tempIdx, ui.split);
-    if (!simTo90.dead){
-      const m90 = round5(simTo90.minutes);
-      const extra = Math.max(0, shown - m90);
-      const back90 = new Date(Date.now() + m90 * 60000);
-      html += '<div class="note"><b>Au-delà de ' + limit + ' % sur borne rapide</b>' +
-        '<p>La tarification du Circuit électrique pénalise le temps passé au-dessus de ' + limit + ' %, ' +
-        'et l’auto n’accepte plus qu’environ ' + fmtNum(curveKw(cfg.curve, limit), 0) + ' kW à partir de là.</p>' +
-        '<p>Jusqu’à ' + limit + ' %&nbsp;: <span class="num">' + fmtShort(m90) + '</span>, retour vers <span class="num">' +
-        fmtClock(back90) + '</span>.</p>' +
-        '<p>Surcoût de ' + limit + ' → ' + ui.to + ' %&nbsp;: <span class="num">+ ' + fmtShort(extra) + '</span>.</p>' +
-        '<button type="button" id="btnTo90">Viser ' + limit + ' %</button></div>';
+  if (p.ceFast && ui.to > limit){
+    let body = '<p>La tarification du Circuit électrique pénalise le temps passé au-dessus de ' + limit + ' %, ' +
+      'et l’auto n’accepte plus qu’environ ' + fmtNum(curveKw(cfg.curve, limit), 0) + ' kW à partir de là.</p>';
+
+    const simLimit = ui.from < limit ? simulate(ui.from, limit, p, ui.tempIdx, ui.split) : null;
+    if (simLimit && !simLimit.dead){
+      const mLimit = round5(simLimit.minutes);
+      const surcout = Math.max(0, shown - mLimit);
+      const backLimit = new Date(Date.now() + mLimit * 60000);
+      body += '<p>Jusqu’à ' + limit + ' %&nbsp;: <span class="num">' + fmtShort(mLimit) + '</span>, retour vers <span class="num">' +
+        fmtClock(backLimit) + '</span>.</p>' +
+        '<p>Surcoût de ' + limit + ' → ' + ui.to + ' %&nbsp;: <span class="num">+ ' + fmtShort(surcout) + '</span>.</p>' +
+        '<button type="button" id="btnTo90">Viser ' + limit + ' %</button>';
+    } else if (ui.from >= limit){
+      body += '<p>La session se déroule entièrement dans cette plage&nbsp;: ' +
+        '<span class="num">' + fmtShort(sim.minutes) + '</span> pour ' + (ui.to - ui.from) + ' points de charge. ' +
+        'Une borne de niveau 2 fait le même travail sans occuper la borne rapide.</p>';
     }
+
+    html += '<div class="note"><b>Au-delà de ' + limit + ' % sur borne rapide</b>' + body + '</div>';
   }
 
   // Détail
