@@ -106,15 +106,25 @@ Tout est éditable et conservé dans `localStorage` : capacité, chargeur embarq
 des bornes, les 7 segments de la courbe DC, facteurs et plafonds de température, seuil
 d'avertissement. Export et import JSON, et remise aux défauts.
 
-## Déploiement
+## En ligne
 
-GitHub Pages sur la racine du dépôt. Rien à construire.
+**https://molivierbergeron.github.io/Recharge/**
 
 Sur iPhone : ouvrir la page dans Safari → Partager → *Sur l'écran d'accueil*. Le service worker met
 les fichiers en cache, l'app fonctionne ensuite hors ligne.
 
-Après un déploiement, incrémenter `CACHE` dans `sw.js` pour que les appareils déjà installés
-récupèrent la nouvelle version.
+## Déploiement
+
+Rien à construire : le site *est* le contenu du dépôt.
+
+GitHub Pages sert la branche `gh-pages`, et le workflow `.github/workflows/pages.yml` y republie la
+racine à chaque push sur la branche par défaut, en commit orphelin. `.github` est retiré du site
+publié — le jeton du workflow n'a pas le droit d'écrire des fichiers de workflow sur une autre
+branche, et le site n'en a pas besoin.
+
+Le service worker sert le cache d'abord et le rafraîchit en arrière-plan : après un déploiement, la
+nouvelle version apparaît au chargement suivant. Pour qu'elle s'applique immédiatement, incrémenter
+`CACHE` dans `sw.js`.
 
 ## Fichiers
 
@@ -124,6 +134,7 @@ récupèrent la nouvelle version.
 | `sw.js` | Service worker, cache hors ligne |
 | `manifest.webmanifest` | Métadonnées d'installation |
 | `icon-*.png` | Icônes d'écran d'accueil |
+| `.github/workflows/pages.yml` | Publication sur `gh-pages` |
 
 ## Suite
 
