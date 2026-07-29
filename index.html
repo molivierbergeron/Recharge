@@ -311,7 +311,7 @@
 
     <div class="cfg-block" style="border-top:0;padding-top:0">
       <h2>Véhicule</h2>
-      <p>Énergie utilisable de la batterie et pertes entre la borne et les cellules. Les pertes n’allongent pas le temps de charge&nbsp;: elles expliquent l’écart entre les kWh facturés et les kWh réellement stockés.</p>
+      <p>Énergie utilisable de la batterie et pertes entre la borne et les cellules. Ces pertes allongent la recharge&nbsp;: l’énergie dissipée dans le câble, le BMS et la pompe de refroidissement du pack ne fait pas monter l’état de charge. Elles expliquent aussi l’écart entre les kWh facturés et les kWh réellement stockés.</p>
       <div class="fld"><label for="cUsable">Capacité utilisable (kWh)</label><input type="number" id="cUsable" inputmode="decimal" step="0.5" min="10" max="200"></div>
       <div class="fld"><label for="cOnboard">Chargeur AC embarqué (kW)</label><input type="number" id="cOnboard" inputmode="decimal" step="0.1" min="1" max="30"></div>
       <div class="fld"><label for="cAcLoss">Pertes AC (%)</label><input type="number" id="cAcLoss" inputmode="decimal" step="0.5" min="0" max="40"></div>
@@ -382,7 +382,10 @@
    Défauts
    ========================================================= */
 const DEFAULTS = {
-  battery: { usableKwh: 75, onboardAcKw: 11, acLoss: 0.10, dcLoss: 0.05 },
+  // Pertes DC déduites de la session du 29 juillet : la borne a compté 28,686 kWh pour
+  // faire passer l'auto de 63 % à 87 %, soit 0,809 kWh par point d'état de charge. Avec
+  // les 75 kWh utiles de la LR DM, il s'en perd 7,2 % entre la borne et les cellules.
+  battery: { usableKwh: 75, onboardAcKw: 11, acLoss: 0.10, dcLoss: 0.07 },
 
   // Courbe de charge DC : puissance acceptée par l'auto, borne >=150 kW, batterie tempérée
   curve: [
@@ -390,8 +393,13 @@ const DEFAULTS = {
     { from: 30, to: 50,  kw: 120 },
     { from: 50, to: 65,  kw: 95  },
     { from: 65, to: 75,  kw: 70  },
+    // 75-85 % : non mesuré. La borne 50 kW plafonnait avant que l'auto ne bride, donc
+    // la mesure ne donne qu'une borne inférieure (≥ 52 kW). Valeur tirée de la courbe
+    // publiée pour la LR DM.
     { from: 75, to: 85,  kw: 55  },
-    { from: 85, to: 90,  kw: 35  },
+    // 85-90 % : mesuré à 86 %, 72 A × 445 V = 32,0 kW au port de charge. Avec le
+    // facteur 0,95 du cran « Frais », 34 kW redonne 32,3 kW.
+    { from: 85, to: 90,  kw: 34  },
     { from: 90, to: 100, kw: 12  }
   ],
 
@@ -526,6 +534,11 @@ function powerAt(soc, preset, tempIdx, split){
 // Intégration numérique par pas de 1 %
 function simulate(from, to, preset, tempIdx, split){
   const stepKwh = cfg.battery.usableKwh / 100;
+  // Part de la puissance affichée qui atteint réellement les cellules. Ce qui se perd
+  // en route — câble, contacteurs, BMS, pompe de refroidissement du pack — ne fait pas
+  // monter l'état de charge, donc les pertes allongent bel et bien la recharge.
+  const loss = preset.type === 'ac' ? cfg.battery.acLoss : cfg.battery.dcLoss;
+  const yieldRatio = loss < 1 ? 1 - loss : 1;
   const steps = [];
   let minutes = 0, kwhBattery = 0;
 
@@ -537,21 +550,22 @@ function simulate(from, to, preset, tempIdx, split){
 
   for (let soc = Math.round(from); soc < Math.round(to); soc++){
     const p = powerAt(soc, preset, tempIdx, split);
-    if (!(p > MIN_KW)) return { dead:true, reason:'lowPower', minPower:p };
-    const m = (stepKwh / p) * 60;
+    const pBattery = p * yieldRatio;
+    if (!(pBattery > MIN_KW)) return { dead:true, reason:'lowPower', minPower:p };
+    const m = (stepKwh / pBattery) * 60;
     minutes += m;
     kwhBattery += stepKwh;
     steps.push({ soc:soc, kw:p, minutes:m });
   }
 
-  const loss = preset.type === 'ac' ? cfg.battery.acLoss : cfg.battery.dcLoss;
-  const kwhStation = loss < 1 ? kwhBattery / (1 - loss) : kwhBattery;
+  const kwhStation = kwhBattery / yieldRatio;
   return {
     dead: false,
     minutes: minutes,
     kwhBattery: kwhBattery,
     kwhStation: kwhStation,
-    avgKw: minutes > 0 ? kwhBattery / (minutes / 60) : 0,
+    // Moyenne exprimée côté borne, pour se comparer directement à ce qu'affiche l'auto.
+    avgKw: minutes > 0 ? kwhStation / (minutes / 60) : 0,
     peakKw: steps.reduce((a,s)=>Math.max(a,s.kw), 0),
     steps: steps
   };
