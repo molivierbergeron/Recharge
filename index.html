@@ -399,9 +399,11 @@ const DEFAULTS = {
     { id:'home',    name:'Maison',   sub:'Niveau 2 · 48 A', type:'ac', kw:11,  real:0.95 },
     { id:'cabin',   name:'Chalet',   sub:'120 V',           type:'ac', kw:1.2, real:0.85, lowVoltage:true },
     { id:'ce-l2',   name:'CE — L2',  sub:'Niveau 2 public', type:'ac', kw:7.2, real:0.95 },
-    // BRCC 50 : mesuré à 120 A × 411 V = 49,3 kW, soit 0,99 du nominal. 0,97 garde
-    // une marge pour les bornes du parc qui plafonnent un peu plus bas.
-    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.97, ceFast:true },
+    // BRCC 50 : deux relevés sur la même session, à 58 % puis à 73 % de charge —
+    // 120 A × 411 V = 49,32 kW, puis 114 A × 433 V = 49,36 kW. La borne tient une
+    // puissance constante pendant que la tension du pack monte, à 0,987 du nominal.
+    // 0,98 garde un cheveu de marge pour les bornes qui plafonnent plus bas.
+    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.98, ceFast:true },
     // 100 et 180 kW : non mesurés. Relevés au même titre que le 50, mais avec plus
     // de marge — le sous-régime est plus fréquent sur les bornes de forte puissance.
     { id:'brcc100', name:'CE — BRCC', sub:'100 kW',         type:'dc', kw:100, real:0.90, ceFast:true, splittable:true, splitRatio:0.5 },
