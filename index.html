@@ -390,8 +390,8 @@ const DEFAULTS = {
     { from: 30, to: 50,  kw: 120 },
     { from: 50, to: 65,  kw: 95  },
     { from: 65, to: 75,  kw: 70  },
-    { from: 75, to: 85,  kw: 45  },
-    { from: 85, to: 90,  kw: 28  },
+    { from: 75, to: 85,  kw: 55  },
+    { from: 85, to: 90,  kw: 35  },
     { from: 90, to: 100, kw: 12  }
   ],
 
@@ -399,15 +399,24 @@ const DEFAULTS = {
     { id:'home',    name:'Maison',   sub:'Niveau 2 · 48 A', type:'ac', kw:11,  real:0.95 },
     { id:'cabin',   name:'Chalet',   sub:'120 V',           type:'ac', kw:1.2, real:0.85, lowVoltage:true },
     { id:'ce-l2',   name:'CE — L2',  sub:'Niveau 2 public', type:'ac', kw:7.2, real:0.95 },
-    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.85, ceFast:true },
-    { id:'brcc100', name:'CE — BRCC', sub:'100 kW',         type:'dc', kw:100, real:0.85, ceFast:true, splittable:true, splitRatio:0.5 },
-    { id:'brcc180', name:'CE — BRCC', sub:'180 kW',         type:'dc', kw:180, real:0.85, ceFast:true, splittable:true, splitRatio:0.5 }
+    // BRCC 50 : mesuré à 120 A × 411 V = 49,3 kW, soit 0,99 du nominal. 0,97 garde
+    // une marge pour les bornes du parc qui plafonnent un peu plus bas.
+    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.97, ceFast:true },
+    // 100 et 180 kW : non mesurés. Relevés au même titre que le 50, mais avec plus
+    // de marge — le sous-régime est plus fréquent sur les bornes de forte puissance.
+    { id:'brcc100', name:'CE — BRCC', sub:'100 kW',         type:'dc', kw:100, real:0.90, ceFast:true, splittable:true, splitRatio:0.5 },
+    { id:'brcc180', name:'CE — BRCC', sub:'180 kW',         type:'dc', kw:180, real:0.90, ceFast:true, splittable:true, splitRatio:0.5 }
   ],
 
   temps: [
     { id:'summer',  label:'Été',        range:'> 15 °C',      dcFactor:1.00, dcCap:null, acFactor:1.00 },
-    { id:'cool',    label:'Frais',      range:'5 à 15 °C',    dcFactor:0.90, dcCap:null, acFactor:1.00 },
-    { id:'cold',    label:'Froid',      range:'−10 à 5 °C',   dcFactor:1.00, dcCap:70,   acFactor:0.90 },
+    // À 14 °C, l'auto tirait toute la puissance de la borne : aucun bridage visible.
+    // La mesure ne prouve pas l'absence totale de bridage — la borne était le facteur
+    // limitant — mais elle exclut le −10 % qui était appliqué ici.
+    { id:'cool',    label:'Frais',      range:'5 à 15 °C',    dcFactor:0.95, dcCap:null, acFactor:1.00 },
+    // Le plafond de 70 kW ne mord pas sur une borne 50 kW : sans facteur, « Froid »
+    // ressortait plus rapide que « Frais ». Le facteur rétablit l'ordre entre les crans.
+    { id:'cold',    label:'Froid',      range:'−10 à 5 °C',   dcFactor:0.85, dcCap:70,   acFactor:0.90 },
     { id:'vcold',   label:'Très froid', range:'−20 à −10 °C', dcFactor:1.00, dcCap:40,   acFactor:0.75 },
     { id:'extreme', label:'Extrême',    range:'< −20 °C',     dcFactor:1.00, dcCap:25,   acFactor:0.60, kills120:true }
   ],
@@ -417,7 +426,10 @@ const DEFAULTS = {
 };
 
 const MIN_KW = 0.2;          // sous ce seuil, la charge nette est considérée nulle
-const STORE_CFG = 'recharge.config.v1';
+// La clé passe à v2 avec la révision du modèle de charge : `saveConfig` sérialise la
+// configuration entière, donc une config sauvegardée fige aussi les valeurs jamais
+// touchées et masquerait les nouveaux défauts. Changer de clé les laisse repasser.
+const STORE_CFG = 'recharge.config.v2';
 const STORE_UI  = 'recharge.ui.v1';
 
 /* =========================================================
