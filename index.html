@@ -40,7 +40,8 @@
     -webkit-font-smoothing:antialiased;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  .wrap{max-width:520px;margin:0 auto;padding:0 24px 72px}
+  /* La marge basse dégage la hauteur du rappel ancré, qui recouvre le bas de la page. */
+  .wrap{max-width:520px;margin:0 auto;padding:0 24px 116px}
 
   /* ---------- header ---------- */
   header{
@@ -136,26 +137,56 @@
   .result{padding-top:32px}
   .res-dur{font-size:72px;font-weight:600;line-height:.95;letter-spacing:-.045em;margin:0}
   .res-dur u{text-decoration:none;font-size:30px;font-weight:300;color:var(--muted);letter-spacing:-.01em;margin:0 2px 0 4px}
-  .res-back{margin:20px 0 0;font-size:24px;font-weight:600;color:var(--accent);letter-spacing:-.01em}
+  .res-back{margin:20px 0 0;font-size:24px;font-weight:600;color:var(--accent);letter-spacing:-.01em;cursor:pointer}
+  .res-back:active{opacity:.6}
   .res-back span{display:block;font-size:12px;font-weight:300;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
   .res-sub{margin:16px 0 0;font-size:13px;font-weight:300;color:var(--muted)}
   .res-none{margin:0;font-size:28px;font-weight:300;color:var(--muted);letter-spacing:-.01em}
+
+  /* Départ de la charge : discret par défaut, puisque « maintenant » couvre presque tous les cas. */
+  .start{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px}
+  .start-btn{
+    appearance:none;border:0;background:none;padding:0;font:inherit;font-size:13px;
+    color:var(--muted);cursor:pointer;text-align:left;
+  }
+  .start-btn b{
+    font-weight:400;color:var(--ink);
+    border-bottom:1px dotted var(--line-strong);padding-bottom:1px;
+  }
+  .start-btn:active b{border-bottom-color:var(--accent);color:var(--accent)}
+  .start-time{
+    appearance:none;border:0;border-bottom:1px solid var(--accent);background:transparent;
+    color:var(--ink);font:inherit;font-size:13px;padding:2px 0;min-width:96px;
+  }
+  .start-time[hidden],.start-now[hidden]{display:none}
+  .start-time:focus{outline:none}
+  .start-now{
+    appearance:none;border:1px solid var(--line-strong);background:transparent;color:var(--muted);
+    font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    padding:5px 9px;cursor:pointer;
+  }
+  .start-now:active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
   /* Rappel ancré en bas tant que le résultat n'est pas à l'écran :
      l'heure de retour ne doit jamais demander un défilement. */
   .dock{
     position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);
-    border-top:1px solid var(--line-strong);
-    padding:12px 24px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--ink);
+    box-shadow:0 -12px 28px rgba(26,26,26,.09);
+    padding:14px 24px;padding-bottom:calc(14px + env(safe-area-inset-bottom));
   }
   .dock[hidden]{display:none}
-  .dock-in{max-width:520px;margin:0 auto;display:flex;align-items:baseline;justify-content:space-between;gap:16px}
-  .dock-d{font-size:26px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
-  .dock-d u{text-decoration:none;font-size:15px;font-weight:300;color:var(--muted);margin:0 1px 0 3px}
-  .dock-b{font-size:20px;font-weight:600;color:var(--accent);white-space:nowrap}
+  .dock-in{max-width:520px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+  .dock-k{
+    display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:3px;
+  }
+  .dock-d{font-size:38px;font-weight:600;letter-spacing:-.035em;line-height:1;white-space:nowrap}
+  .dock-d u{text-decoration:none;font-size:19px;font-weight:300;color:var(--muted);letter-spacing:-.01em;margin:0 1px 0 3px}
+  .dock-b{font-size:22px;font-weight:600;color:var(--accent);line-height:1.1;white-space:nowrap;text-align:right}
   .dock-b span{
-    font-size:11px;font-weight:300;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--faint);margin-right:8px;
+    display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:3px;
   }
 
   .note{
@@ -300,6 +331,16 @@
 
     <section class="result" id="result">
       <div id="resHero"></div>
+
+      <!-- Hors du bloc réécrit à chaque calcul : le champ garde le focus pendant la saisie. -->
+      <div class="start" id="startRow">
+        <button type="button" class="start-btn" id="btnStart" aria-expanded="false">
+          Départ <b id="startTxt">maintenant</b>
+        </button>
+        <input type="time" id="startTime" class="start-time" aria-label="Heure de branchement" hidden>
+        <button type="button" class="start-now" id="btnStartNow" hidden>Maintenant</button>
+      </div>
+
       <div id="resMark" aria-hidden="true"></div>
       <div id="resExtra"></div>
     </section>
@@ -406,16 +447,18 @@ const DEFAULTS = {
   presets: [
     { id:'home',    name:'Maison',   sub:'Niveau 2 · 48 A', type:'ac', kw:11,  real:0.95 },
     { id:'cabin',   name:'Chalet',   sub:'120 V',           type:'ac', kw:1.2, real:0.85, lowVoltage:true },
-    { id:'ce-l2',   name:'CE — L2',  sub:'Niveau 2 public', type:'ac', kw:7.2, real:0.95 },
+    // Hors de chez soi, ce qui distingue une borne c'est sa puissance, pas son nom :
+    // `leadPower` met les kW en tête et renvoie l'exploitant en seconde ligne.
+    { id:'ce-l2',   name:'CE — L2',  sub:'Niveau 2 public', type:'ac', kw:7.2, real:0.95, leadPower:true },
     // BRCC 50 : deux relevés sur la même session, à 58 % puis à 73 % de charge —
     // 120 A × 411 V = 49,32 kW, puis 114 A × 433 V = 49,36 kW. La borne tient une
     // puissance constante pendant que la tension du pack monte, à 0,987 du nominal.
     // 0,98 garde un cheveu de marge pour les bornes qui plafonnent plus bas.
-    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.98, ceFast:true },
+    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.98, ceFast:true, leadPower:true },
     // 100 et 180 kW : non mesurés. Relevés au même titre que le 50, mais avec plus
     // de marge — le sous-régime est plus fréquent sur les bornes de forte puissance.
-    { id:'brcc100', name:'CE — BRCC', sub:'100 kW',         type:'dc', kw:100, real:0.90, ceFast:true, splittable:true, splitRatio:0.5 },
-    { id:'brcc180', name:'CE — BRCC', sub:'180 kW',         type:'dc', kw:180, real:0.90, ceFast:true, splittable:true, splitRatio:0.5 }
+    { id:'brcc100', name:'CE — BRCC', sub:'100 kW',         type:'dc', kw:100, real:0.90, ceFast:true, leadPower:true, splittable:true, splitRatio:0.5 },
+    { id:'brcc180', name:'CE — BRCC', sub:'180 kW',         type:'dc', kw:180, real:0.90, ceFast:true, leadPower:true, splittable:true, splitRatio:0.5 }
   ],
 
   temps: [
@@ -589,23 +632,60 @@ const round5 = m => Math.max(5, Math.ceil(m / 5) * 5);
 /* =========================================================
    Formatage
    ========================================================= */
-// « 45 min », « 1 h 05 », « 5 h » — l'unité en petit, le chiffre en grand
+// Découpe en jours / heures / minutes. Au-delà de 24 h, les minutes ne veulent plus
+// rien dire : « 2 j 7 h » se lit, « 55 h 12 » demande un calcul.
+function partsOf(min){
+  let t = Math.round(min);
+  let j = Math.floor(t / 1440);
+  let h = Math.round((t - j * 1440) / 60);
+  if (j >= 1 && h === 24){ j += 1; h = 0; }   // l'arrondi peut remplir la journée
+  return { j:j, h:j >= 1 ? h : Math.floor(t / 60), m:t % 60, t:t };
+}
+
+// « 45 min », « 1 h 05 », « 5 h », « 2 j 7 h » — l'unité en petit, le chiffre en grand
 function durationHtml(min){
-  const t = Math.round(min);
-  const h = Math.floor(t / 60), m = t % 60;
-  if (h === 0) return t + '<u>min</u>';
-  if (m === 0) return h + '<u>h</u>';
-  return h + '<u>h</u>' + String(m).padStart(2, '0');
+  const p = partsOf(min);
+  // L'espace entre les deux nombres est placé dans un <u> : à 72 px, une espace pleine
+  // creuserait un trou. Elle prend ainsi la taille réduite des unités.
+  if (p.j >= 1) return p.j + '<u>j</u>' + (p.h ? '<u> </u>' + p.h + '<u>h</u>' : '');
+  if (p.h === 0) return p.t + '<u>min</u>';
+  if (p.m === 0) return p.h + '<u>h</u>';
+  return p.h + '<u>h</u>' + String(p.m).padStart(2, '0');
 }
 
 function fmtShort(min){
-  const t = Math.round(min);
-  const h = Math.floor(t / 60), m = t % 60;
-  return h === 0 ? t + ' min' : (m === 0 ? h + ' h' : h + ' h ' + String(m).padStart(2,'0'));
+  const p = partsOf(min);
+  if (p.j >= 1) return p.j + ' j' + (p.h ? ' ' + p.h + ' h' : '');
+  if (p.h === 0) return p.t + ' min';
+  return p.m === 0 ? p.h + ' h' : p.h + ' h ' + String(p.m).padStart(2,'0');
 }
 
 function fmtClock(date){
   return date.getHours() + ' h ' + String(date.getMinutes()).padStart(2,'0');
+}
+
+const JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet',
+               'août','septembre','octobre','novembre','décembre'];
+
+// Nombre de nuits entre deux instants, en ignorant l'heure. Les dates sont ramenées à
+// minuit avant la soustraction, et l'arrondi absorbe les journées de 23 ou 25 heures
+// des changements d'heure.
+function nuitsEntre(a, b){
+  const ja = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const jb = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((jb - ja) / 86400000);
+}
+
+// Une charge au chalet peut déborder sur plusieurs jours : « 55 h » oblige à compter
+// soi-même. Dès que la fin tombe un autre jour, le jour est nommé.
+function fmtWhen(date, from){
+  const heure = fmtClock(date);
+  const n = nuitsEntre(from || new Date(), date);
+  if (n <= 0) return heure;
+  if (n === 1) return 'demain ' + heure;
+  if (n < 7)   return JOURS[date.getDay()] + ' ' + heure;
+  return JOURS[date.getDay()] + ' ' + date.getDate() + ' ' + MOIS[date.getMonth()] + ', ' + heure;
 }
 
 function fmtNum(v, d){
@@ -635,8 +715,17 @@ let ui = {
   presetId: 'brcc100',
   tempIdx: seasonTempIdx(),
   split: false,
-  preheat: false
+  preheat: false,
+  // Instant où la charge commence. `null` = maintenant, recalculé en continu. Volontairement
+  // hors du stockage : une heure absolue mémorisée serait périmée à la prochaine ouverture.
+  startAt: null
 };
+
+// Le calcul par défaut répond à « si je branche là, ce sera prêt quand ? ». Fixer une
+// heure de départ répond à « si je branche à telle heure ».
+function startTime(){
+  return ui.startAt != null ? ui.startAt : Date.now();
+}
 
 (function restoreUi(){
   let s;
@@ -676,11 +765,16 @@ function preset(){ return cfg.presets.find(p => p.id === ui.presetId) || cfg.pre
 const $ = id => document.getElementById(id);
 
 function renderPresets(){
-  $('segPreset').innerHTML = cfg.presets.map(p =>
-    '<button type="button" role="button" aria-pressed="' + (p.id === ui.presetId) + '" data-preset="' + esc(p.id) + '">' +
-      '<b>' + esc(p.name) + '</b><i>' + esc(p.sub) + '</i>' +
-    '</button>'
-  ).join('');
+  $('segPreset').innerHTML = cfg.presets.map(p => {
+    // À la maison ou au chalet, le lieu suffit à identifier la borne. Ailleurs, c'est
+    // la puissance qu'on cherche du regard — elle passe donc en tête.
+    const power  = fmtNum(p.kw, Number.isInteger(p.kw) ? 0 : 1) + ' kW';
+    const lead   = p.leadPower ? power : p.name;
+    const second = p.leadPower ? p.name : p.sub;
+    return '<button type="button" role="button" aria-pressed="' + (p.id === ui.presetId) + '" data-preset="' + esc(p.id) + '">' +
+      '<b>' + esc(lead) + '</b><i>' + esc(second) + '</i>' +
+    '</button>';
+  }).join('');
 }
 
 function renderTemps(){
@@ -717,8 +811,15 @@ function renderControls(){
 }
 
 function setDock(durHtml, backHtml){
-  $('dockDur').innerHTML = durHtml;
+  $('dockDur').innerHTML = '<span class="dock-k">Temps de charge</span>' + durHtml;
   $('dockBack').innerHTML = backHtml;
+}
+
+// Ligne du départ : « maintenant » tant qu'aucune heure n'est fixée.
+function renderStart(){
+  const fixe = ui.startAt != null;
+  $('startTxt').textContent = fixe ? fmtWhen(new Date(ui.startAt)) : 'maintenant';
+  $('btnStartNow').hidden = !fixe;
 }
 
 function renderResult(){
@@ -727,6 +828,8 @@ function renderResult(){
   const extra = $('resExtra');
   const t = cfg.temps[ui.tempIdx];
   const wasOpen = !!extra.querySelector('details[open]');
+
+  renderStart();
 
   if (ui.to <= ui.from){
     hero.innerHTML = '<p class="lbl">Résultat</p>' +
@@ -752,16 +855,18 @@ function renderResult(){
   }
 
   const shown = round5(sim.minutes);
-  const back = new Date(Date.now() + shown * 60000);
+  const debut = new Date(startTime());
+  const back  = new Date(startTime() + shown * 60000);
+  const quand = fmtWhen(back, debut);
 
   hero.innerHTML =
     '<p class="lbl">Résultat</p>' +
     '<p class="res-dur">' + durationHtml(shown) + '</p>' +
-    '<p class="res-back"><span>Retour vers</span>' + fmtClock(back) + '</p>' +
+    '<p class="res-back"><span>Prêt</span>' + esc(quand) + '</p>' +
     '<p class="res-sub">' + ui.from + ' → ' + ui.to + ' %  ·  ' +
       fmtNum(sim.kwhBattery, 1) + ' kWh  ·  ' + fmtNum(sim.avgKw, 1) + ' kW en moyenne</p>';
 
-  setDock(durationHtml(shown), '<span>Retour vers</span>' + fmtClock(back));
+  setDock(durationHtml(shown), '<span>Prêt</span>' + esc(quand));
 
   let html = '';
 
@@ -772,12 +877,12 @@ function renderResult(){
     if (!simTo90.dead){
       const m90 = round5(simTo90.minutes);
       const extra = Math.max(0, shown - m90);
-      const back90 = new Date(Date.now() + m90 * 60000);
+      const back90 = new Date(startTime() + m90 * 60000);
       html += '<div class="note"><b>Au-delà de ' + limit + ' % sur borne rapide</b>' +
         '<p>La tarification du Circuit électrique pénalise le temps passé au-dessus de ' + limit + ' %, ' +
         'et l’auto n’accepte plus qu’environ ' + fmtNum(curveKw(cfg.curve, limit), 0) + ' kW à partir de là.</p>' +
-        '<p>Jusqu’à ' + limit + ' %&nbsp;: <span class="num">' + fmtShort(m90) + '</span>, retour vers <span class="num">' +
-        fmtClock(back90) + '</span>.</p>' +
+        '<p>Jusqu’à ' + limit + ' %&nbsp;: <span class="num">' + fmtShort(m90) + '</span>, prêt <span class="num">' +
+        esc(fmtWhen(back90, new Date(startTime()))) + '</span>.</p>' +
         '<p>Surcoût de ' + limit + ' → ' + ui.to + ' %&nbsp;: <span class="num">+ ' + fmtShort(extra) + '</span>.</p>' +
         '<button type="button" id="btnTo90">Viser ' + limit + ' %</button></div>';
     }
@@ -818,6 +923,51 @@ function renderResult(){
 function kv(k, v){
   return '<dl class="kv"><dt>' + k + '</dt><dd>' + v + '</dd></dl>';
 }
+
+/* ---------- Heure de branchement ---------- */
+
+// Une heure saisie désigne la prochaine occurrence : passé aujourd'hui, c'est demain.
+function prochainMoment(h, m){
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  if (d.getTime() < Date.now() - 60000) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+function ouvrirDepart(){
+  const inp = $('startTime');
+  const base = new Date(startTime());
+  inp.value = String(base.getHours()).padStart(2,'0') + ':' + String(base.getMinutes()).padStart(2,'0');
+  inp.hidden = false;
+  $('btnStart').hidden = true;
+  $('btnStart').setAttribute('aria-expanded', 'true');
+  inp.focus();
+  if (typeof inp.showPicker === 'function'){ try { inp.showPicker(); } catch(e){} }
+}
+
+function fermerDepart(){
+  $('startTime').hidden = true;
+  $('btnStart').hidden = false;
+  $('btnStart').setAttribute('aria-expanded', 'false');
+}
+
+$('btnStart').addEventListener('click', ouvrirDepart);
+// L'heure de retour affichée est le point d'accroche le plus naturel pour la corriger.
+$('resHero').addEventListener('click', e=>{ if (e.target.closest('.res-back')) ouvrirDepart(); });
+
+$('startTime').addEventListener('change', ()=>{
+  const v = $('startTime').value;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v);
+  if (m){
+    const hh = +m[1], mm = +m[2];
+    if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60) ui.startAt = prochainMoment(hh, mm);
+  }
+  fermerDepart();
+  commit();
+});
+$('startTime').addEventListener('blur', fermerDepart);
+
+$('btnStartNow').addEventListener('click', ()=>{ ui.startAt = null; fermerDepart(); commit(); });
 
 function commit(){
   if (ui.to <= ui.from) ui.to = Math.min(100, ui.from + 1);
@@ -1038,9 +1188,15 @@ $('fileImport').addEventListener('change', e=>{
    ========================================================= */
 commit();
 
-// L'heure de retour se recalcule au fil du temps et au retour en avant-plan
-setInterval(renderResult, 30000);
-document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) renderResult(); });
+// L'heure de retour se recalcule au fil du temps et au retour en avant-plan. Un départ
+// fixé n'a rien à recalculer, et un rafraîchissement pendant la saisie fermerait le champ.
+function rafraichirHeure(){
+  if (ui.startAt != null) return;
+  if (!$('startTime').hidden) return;
+  renderResult();
+}
+setInterval(rafraichirHeure, 30000);
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) rafraichirHeure(); });
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')){
   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
