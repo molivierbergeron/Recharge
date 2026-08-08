@@ -1,6 +1,6 @@
 # Recharge — Vision, epics et séquence
 
-*Audit du 2 août 2026, sur le commit `4e2dfac`. Ce fichier est une photographie horodatée : il n'est pas mis à jour après coup.*
+*Audit du 8 août 2026, sur le commit `4e2dfac`. Ce fichier est une photographie horodatée : il n'est pas mis à jour après coup.*
 
 ---
 
@@ -16,7 +16,7 @@
 
 | | |
 |---|---|
-| **Statut** | Vivant — dernier commit il y a 2 jours |
+| **Statut** | Vivant — dernier commit de code il y a 8 jours |
 | **Dernière modification** | 2026-07-31, `4e2dfac` « Recentrer l'interface sur la question réellement posée » |
 | **Stack réelle** | HTML + CSS + JavaScript vanille dans un fichier unique de 1 206 lignes. Service worker (`sw.js`, 48 lignes), manifeste PWA. Aucun build, aucun `package.json`, aucune bibliothèque tierce (vérifié : `find` sur le dépôt ne retourne ni `package.json` ni fichier de test) |
 | **Dépendances externes** | GitHub Pages pour l'hébergement, GitHub Actions pour la publication (`.github/workflows/pages.yml`). Aucun appel réseau sortant à l'exécution : le seul `fetch` du code est `sw.js:37`, restreint à la même origine par le garde `sw.js:33` |
