@@ -963,11 +963,27 @@ $('startTime').addEventListener('change', ()=>{
     if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60) ui.startAt = prochainMoment(hh, mm);
   }
   fermerDepart();
+  window.track?.('recharge-start-set', { mode: 'heure' });
   commit();
 });
 $('startTime').addEventListener('blur', fermerDepart);
 
-$('btnStartNow').addEventListener('click', ()=>{ ui.startAt = null; fermerDepart(); commit(); });
+$('btnStartNow').addEventListener('click', ()=>{
+  ui.startAt = null;
+  fermerDepart();
+  window.track?.('recharge-start-set', { mode: 'maintenant' });
+  commit();
+});
+
+// Une estimation vaut d'être comptée quand elle répond à un geste — pas au
+// rendu d'ouverture, déjà couvert par la page vue. Et une seule fois par
+// salve : glisser un curseur appelle commit() cent fois pour une seule
+// question posée à l'app.
+let minuterieEstimation, rendueUneFois = false;
+function marquerEstimation(){
+  clearTimeout(minuterieEstimation);
+  minuterieEstimation = setTimeout(()=>window.track?.('recharge-estimate-run', {}), 1200);
+}
 
 function commit(){
   if (ui.to <= ui.from) ui.to = Math.min(100, ui.from + 1);
@@ -976,6 +992,8 @@ function commit(){
   renderTemps();
   renderResult();
   saveUi();
+  if (rendueUneFois) marquerEstimation();
+  rendueUneFois = true;
 }
 
 /* =========================================================
@@ -1008,6 +1026,7 @@ $('segPreset').addEventListener('click', e=>{
   const b = e.target.closest('[data-preset]');
   if (!b) return;
   ui.presetId = b.dataset.preset;
+  window.track?.('recharge-preset-select', { preset: ui.presetId });
   commit();
 });
 
@@ -1016,6 +1035,7 @@ $('segTemp').addEventListener('click', e=>{
   if (!b) return;
   ui.tempIdx = parseInt(b.dataset.temp, 10);
   tempTouchedAt = Date.now();
+  window.track?.('recharge-temp-select', { temp: ui.tempIdx });
   commit();
 });
 
@@ -1107,7 +1127,7 @@ function showCfg(on){
   $('btnCfg').setAttribute('aria-label', on ? 'Fermer la configuration' : 'Configuration');
   $('btnCfg').querySelector('.i-gear').hidden = on;
   $('btnCfg').querySelector('.i-close').hidden = !on;
-  if (on) renderCfg();
+  if (on){ renderCfg(); window.track?.('recharge-config-open', {}); }
   syncDock();
   window.scrollTo(0, 0);
 }
@@ -1143,6 +1163,7 @@ $('btnReset').addEventListener('click', ()=>{
   saveConfig();
   renderCfg();
   commit();
+  window.track?.('recharge-config-reset', {});
   flash('Réglages réinitialisés');
 });
 
@@ -1156,6 +1177,7 @@ $('btnExport').addEventListener('click', ()=>{
   a.click();
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  window.track?.('recharge-config-export', {});
   flash('Configuration exportée');
 });
 
@@ -1174,8 +1196,10 @@ $('fileImport').addEventListener('change', e=>{
       saveConfig();
       renderCfg();
       commit();
+      window.track?.('recharge-config-import', { issue: 'ok' });
       flash('Configuration importée');
     } catch(err){
+      window.track?.('recharge-config-import', { issue: 'illisible' });
       flash('Fichier illisible');
     }
     e.target.value = '';
@@ -1201,6 +1225,25 @@ document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) rafrai
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')){
   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
+</script>
+
+<!-- Mesure d'audience — GoatCounter. Ouvrir la page une fois avec `?owner`
+     marque l'appareil : les visites de Marc-Olivier partent alors sous un
+     chemin préfixé et ne gonflent plus les chiffres du public. -->
+<script>
+  if (new URLSearchParams(location.search).has('owner'))
+    localStorage.setItem('gc-owner','1');
+  window.goatcounter = {
+    path: function(p) {
+      return localStorage.getItem('gc-owner') ? 'owner'+p : p;
+    }
+  };
+</script>
+<script data-goatcounter="https://mobergeron.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<script type="module">
+  import { trackVisit } from './analytics.js';
+  trackVisit('recharge');
 </script>
 </body>
 </html>

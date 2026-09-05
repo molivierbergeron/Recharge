@@ -1,10 +1,11 @@
 /* Service worker minimal : l'app doit fonctionner hors ligne une fois installée.
    Bump CACHE à chaque déploiement pour forcer la mise à jour. */
-const CACHE = 'recharge-v5';
+const CACHE = 'recharge-v6';
 
 const ASSETS = [
   './',
   './index.html',
+  './analytics.js',
   './manifest.webmanifest',
   './icon-180.png',
   './icon-192.png',
