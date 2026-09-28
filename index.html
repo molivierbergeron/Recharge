@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<title>Recharge — Polestar 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="Estimateur de temps de recharge — Polestar 2 Long Range Dual Motor 2021">
+<meta name="theme-color" content="#FAFAF8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Recharge">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  :root{
+    --bg:#FAFAF8;
+    --ink:#1A1A1A;
+    --muted:#6E6E68;
+    --faint:#9A9A93;
+    --line:#E4E4DE;
+    --line-strong:#CFCFC7;
+    --accent:#FF7A00;
+    --s:8px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;
+    font-weight:300;
+    font-size:16px;
+    line-height:1.5;
+    font-variant-numeric:tabular-nums;
+    font-feature-settings:"tnum" 1;
+    -webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  /* La marge basse dégage la hauteur du rappel ancré, qui recouvre le bas de la page. */
+  .wrap{max-width:520px;margin:0 auto;padding:0 24px 116px}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:16px;padding:32px 0 24px;
+  }
+  .brand{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+  .brand small{display:block;font-size:11px;font-weight:300;letter-spacing:.08em;color:var(--muted);margin-top:4px}
+  .gear{
+    appearance:none;border:0;background:none;padding:8px;margin:-8px -8px -8px 0;
+    color:var(--faint);cursor:pointer;line-height:0;
+  }
+  .gear:active{color:var(--ink)}
+  .gear svg{width:20px;height:20px;display:block}
+  .gear svg[hidden]{display:none}
+
+  /* ---------- sections ---------- */
+  section{padding:24px 0}
+  section + section{border-top:1px solid var(--line)}
+  .lbl{
+    font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 16px;
+  }
+
+  /* ---------- steppers ---------- */
+  .stepper + .stepper{margin-top:32px}
+  .stepper-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .stepper-name{font-size:14px;font-weight:300;color:var(--muted)}
+  .stepper-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:4px}
+  .val{font-size:52px;font-weight:600;line-height:1;letter-spacing:-.03em}
+  .val span{font-size:24px;font-weight:300;color:var(--muted);margin-left:4px;letter-spacing:0}
+  .pm{display:flex;gap:8px}
+  .pm button{
+    appearance:none;width:48px;height:48px;border:1px solid var(--line-strong);background:transparent;
+    color:var(--ink);font-size:22px;font-weight:300;line-height:1;cursor:pointer;padding:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pm button:active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .pm button:disabled{color:var(--line-strong);cursor:default}
+  .pm button:disabled:active{background:transparent;color:var(--line-strong);border-color:var(--line)}
+
+  input[type=range]{
+    appearance:none;width:100%;height:24px;margin:8px 0 0;background:transparent;display:block;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line-strong)}
+  input[type=range]::-moz-range-track{height:1px;background:var(--line-strong)}
+  input[type=range]::-webkit-slider-thumb{
+    appearance:none;width:20px;height:20px;background:var(--ink);border:0;border-radius:50%;margin-top:-10px;
+  }
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--ink);border:0;border-radius:50%}
+
+  .quick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}
+  .quick button{
+    appearance:none;border:1px solid var(--line-strong);background:transparent;color:var(--muted);
+    font:inherit;font-size:13px;padding:10px 0;cursor:pointer;text-align:center;
+  }
+  .quick button:active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  /* ---------- segmented ---------- */
+  .seg{display:grid;gap:0;border:1px solid var(--line-strong)}
+  .seg.cols2{grid-template-columns:1fr 1fr}
+  /* 5 choix : trois puis deux, sur une trame de 6 pour que les deux rangées remplissent la largeur */
+  .seg.temps{grid-template-columns:repeat(6,1fr)}
+  .seg.temps button:nth-child(-n+3){grid-column:span 2;border-top:0}
+  .seg.temps button:nth-child(n+4){grid-column:span 3}
+  .seg button{
+    appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;text-align:left;
+    padding:12px 14px;cursor:pointer;border-top:1px solid var(--line);border-left:1px solid var(--line);
+    display:block;min-width:0;
+  }
+  .seg.cols2 button:nth-child(-n+2){border-top:0}
+  .seg.cols2 button:nth-child(odd),.seg.temps button:nth-child(1),.seg.temps button:nth-child(4){border-left:0}
+  .seg button b{display:block;font-size:14px;font-weight:400;line-height:1.3}
+  .seg button i{display:block;font-size:11px;font-style:normal;color:var(--faint);margin-top:2px;line-height:1.3}
+  .seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+  .seg button[aria-pressed=true] b{font-weight:600}
+  .seg button[aria-pressed=true] i{color:rgba(250,250,248,.62)}
+
+  /* ---------- toggles ---------- */
+  .toggles{margin-top:24px}
+  .tg{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;cursor:pointer}
+  .tg + .tg{border-top:1px solid var(--line)}
+  .tg-txt b{display:block;font-size:14px;font-weight:400}
+  .tg-txt i{display:block;font-size:12px;font-style:normal;color:var(--faint);margin-top:2px;line-height:1.35}
+  .sw{flex:0 0 auto;width:44px;height:26px;border:1px solid var(--line-strong);background:transparent;position:relative;transition:background .12s,border-color .12s}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--faint);border-radius:50%;transition:transform .12s,background .12s}
+  .tg input{position:absolute;opacity:0;pointer-events:none}
+  .tg input:checked + .sw{background:var(--ink);border-color:var(--ink)}
+  .tg input:checked + .sw::after{transform:translateX(18px);background:var(--bg)}
+  .tg.disabled{opacity:.38;cursor:default}
+
+  /* ---------- result ---------- */
+  .result{padding-top:32px}
+  .res-dur{font-size:72px;font-weight:600;line-height:.95;letter-spacing:-.045em;margin:0}
+  .res-dur u{text-decoration:none;font-size:30px;font-weight:300;color:var(--muted);letter-spacing:-.01em;margin:0 2px 0 4px}
+  .res-back{margin:20px 0 0;font-size:24px;font-weight:600;color:var(--accent);letter-spacing:-.01em;cursor:pointer}
+  .res-back:active{opacity:.6}
+  .res-back span{display:block;font-size:12px;font-weight:300;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+  .res-sub{margin:16px 0 0;font-size:13px;font-weight:300;color:var(--muted)}
+  .res-none{margin:0;font-size:28px;font-weight:300;color:var(--muted);letter-spacing:-.01em}
+
+  /* Départ de la charge : discret par défaut, puisque « maintenant » couvre presque tous les cas. */
+  .start{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px}
+  .start-btn{
+    appearance:none;border:0;background:none;padding:0;font:inherit;font-size:13px;
+    color:var(--muted);cursor:pointer;text-align:left;
+  }
+  .start-btn b{
+    font-weight:400;color:var(--ink);
+    border-bottom:1px dotted var(--line-strong);padding-bottom:1px;
+  }
+  .start-btn:active b{border-bottom-color:var(--accent);color:var(--accent)}
+  .start-time{
+    appearance:none;border:0;border-bottom:1px solid var(--accent);background:transparent;
+    color:var(--ink);font:inherit;font-size:13px;padding:2px 0;min-width:96px;
+  }
+  .start-time[hidden],.start-now[hidden]{display:none}
+  .start-time:focus{outline:none}
+  .start-now{
+    appearance:none;border:1px solid var(--line-strong);background:transparent;color:var(--muted);
+    font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    padding:5px 9px;cursor:pointer;
+  }
+  .start-now:active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  /* Rappel ancré en bas tant que le résultat n'est pas à l'écran :
+     l'heure de retour ne doit jamais demander un défilement. */
+  .dock{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);
+    border-top:1px solid var(--ink);
+    box-shadow:0 -12px 28px rgba(26,26,26,.09);
+    padding:14px 24px;padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  }
+  .dock[hidden]{display:none}
+  .dock-in{max-width:520px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+  .dock-k{
+    display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:3px;
+  }
+  .dock-d{font-size:38px;font-weight:600;letter-spacing:-.035em;line-height:1;white-space:nowrap}
+  .dock-d u{text-decoration:none;font-size:19px;font-weight:300;color:var(--muted);letter-spacing:-.01em;margin:0 1px 0 3px}
+  .dock-b{font-size:22px;font-weight:600;color:var(--accent);line-height:1.1;white-space:nowrap;text-align:right}
+  .dock-b span{
+    display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:3px;
+  }
+
+  .note{
+    margin-top:24px;padding:16px 0 16px 16px;border-left:2px solid var(--accent);
+    font-size:13px;line-height:1.55;
+  }
+  .note b{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+  .note p{margin:0 0 6px}
+  .note p:last-child{margin-bottom:0}
+  .note .num{font-weight:600}
+  .note button{
+    appearance:none;margin-top:12px;border:1px solid var(--accent);background:transparent;color:var(--accent);
+    font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;
+  }
+  .note button:active{background:var(--accent);color:var(--bg)}
+
+  details{margin-top:32px;border-top:1px solid var(--line);padding-top:16px}
+  summary{
+    list-style:none;cursor:pointer;font-size:11px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--faint);
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:" +";font-weight:300}
+  details[open] summary::after{content:" −"}
+  .kv{display:flex;justify-content:space-between;gap:16px;padding:10px 0;font-size:14px;border-bottom:1px solid var(--line)}
+  .kv:first-of-type{margin-top:16px}
+  .kv dt{color:var(--muted);font-weight:300;margin:0}
+  .kv dd{margin:0;font-weight:400}
+  .bands{margin-top:20px}
+  .bands h4{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 8px}
+  .band{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--line)}
+  .band-r{width:74px;flex:0 0 auto;color:var(--muted)}
+  .band-bar{flex:1 1 auto;height:2px;background:var(--line)}
+  .band-bar i{display:block;height:2px;background:var(--ink)}
+  .band-t{width:62px;flex:0 0 auto;text-align:right}
+
+  /* ---------- config ---------- */
+  .view[hidden]{display:none}
+  .cfg h2{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px}
+  .cfg-block{padding:24px 0;border-top:1px solid var(--line)}
+  .cfg-block > p{margin:0 0 16px;font-size:12px;color:var(--faint);line-height:1.5}
+  .fld{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0}
+  .fld label{font-size:14px;font-weight:300;color:var(--muted)}
+  .cfg input[type=number],.cfg input[type=text]{
+    appearance:none;width:96px;flex:0 0 auto;border:0;border-bottom:1px solid var(--line-strong);
+    background:transparent;color:var(--ink);font:inherit;font-size:16px;font-weight:400;
+    text-align:right;padding:6px 0;border-radius:0;font-variant-numeric:tabular-nums;
+  }
+  .cfg input:focus{outline:none;border-bottom-color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:right;padding:0 0 8px;font-weight:600}
+  th:first-child{text-align:left}
+  td{padding:6px 0;border-top:1px solid var(--line);text-align:right;font-weight:300}
+  td:first-child{text-align:left;color:var(--muted);padding-right:8px}
+  td input{width:64px !important}
+  .cfg-actions{display:flex;flex-wrap:wrap;gap:8px;padding:24px 0 0;border-top:1px solid var(--line)}
+  .btn{
+    appearance:none;border:1px solid var(--line-strong);background:transparent;color:var(--ink);
+    font:inherit;font-size:14px;padding:12px 18px;cursor:pointer;
+  }
+  .btn:active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .btn-accent{border-color:var(--accent);color:var(--accent)}
+  .btn-accent:active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;color:var(--faint);line-height:1.6}
+  .saved{font-size:12px;color:var(--accent);min-height:18px;padding-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Recharge<small>Polestar 2 · 2021 LR DM</small></div>
+    <button class="gear" id="btnCfg" aria-label="Configuration">
+      <svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true" hidden>
+        <path d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+      <svg class="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.2"/>
+        <path d="M19.4 15a1.6 1.6 0 0 0 .32 1.77l.06.06a1.9 1.9 0 1 1-2.7 2.7l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.47v.17a1.9 1.9 0 1 1-3.8 0v-.09a1.6 1.6 0 0 0-1.05-1.46 1.6 1.6 0 0 0-1.77.32l-.06.06a1.9 1.9 0 1 1-2.7-2.7l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-1H3.6a1.9 1.9 0 1 1 0-3.8h.09A1.6 1.6 0 0 0 5.15 9a1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.9 1.9 0 1 1 2.7-2.7l.06.06a1.6 1.6 0 0 0 1.77.32H9.4a1.6 1.6 0 0 0 1-1.47V3.2a1.9 1.9 0 1 1 3.8 0v.09a1.6 1.6 0 0 0 1 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.9 1.9 0 1 1 2.7 2.7l-.06.06a1.6 1.6 0 0 0-.32 1.77v.02a1.6 1.6 0 0 0 1.47 1h.17a1.9 1.9 0 1 1 0 3.8h-.09a1.6 1.6 0 0 0-1.46 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ============ MAIN VIEW ============ -->
+  <main class="view" id="viewMain">
+
+    <section>
+      <p class="lbl">Niveau de charge</p>
+
+      <div class="stepper">
+        <div class="stepper-head"><span class="stepper-name">Je suis à</span></div>
+        <div class="stepper-row">
+          <div class="val" id="fromVal">20<span>%</span></div>
+          <div class="pm">
+            <button type="button" data-step="from" data-d="-1" aria-label="Diminuer le niveau actuel">−</button>
+            <button type="button" data-step="from" data-d="1" aria-label="Augmenter le niveau actuel">+</button>
+          </div>
+        </div>
+        <input type="range" id="fromRange" min="0" max="99" step="1" value="20" aria-label="Niveau de charge actuel">
+      </div>
+
+      <div class="stepper">
+        <div class="stepper-head"><span class="stepper-name">Je veux</span></div>
+        <div class="stepper-row">
+          <div class="val" id="toVal">80<span>%</span></div>
+          <div class="pm">
+            <button type="button" data-step="to" data-d="-1" aria-label="Diminuer la cible">−</button>
+            <button type="button" data-step="to" data-d="1" aria-label="Augmenter la cible">+</button>
+          </div>
+        </div>
+        <input type="range" id="toRange" min="1" max="100" step="1" value="80" aria-label="Niveau de charge visé">
+        <div class="quick">
+          <button type="button" data-add="5" aria-label="Ajouter 5 % à la cible">+5</button>
+          <button type="button" data-add="10" aria-label="Ajouter 10 % à la cible">+10</button>
+          <button type="button" data-add="20" aria-label="Ajouter 20 % à la cible">+20</button>
+          <button type="button" data-set="80">80 %</button>
+          <button type="button" data-set="90">90 %</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="lbl">Borne</p>
+      <div class="seg cols2" id="segPreset"></div>
+
+      <div class="toggles">
+        <label class="tg" id="tgSplitWrap">
+          <span class="tg-txt"><b>Borne partagée</b><i>Deuxième véhicule branché — puissance divisée</i></span>
+          <input type="checkbox" id="tgSplit"><span class="sw"></span>
+        </label>
+        <label class="tg" id="tgPreWrap">
+          <span class="tg-txt"><b>Préchauffage batterie</b><i>Navigation lancée vers la borne 20 à 30 min avant</i></span>
+          <input type="checkbox" id="tgPre"><span class="sw"></span>
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <p class="lbl">Température</p>
+      <div class="seg temps" id="segTemp"></div>
+    </section>
+
+    <section class="result" id="result">
+      <div id="resHero"></div>
+
+      <!-- Hors du bloc réécrit à chaque calcul : le champ garde le focus pendant la saisie. -->
+      <div class="start" id="startRow">
+        <button type="button" class="start-btn" id="btnStart" aria-expanded="false">
+          Départ <b id="startTxt">maintenant</b>
+        </button>
+        <input type="time" id="startTime" class="start-time" aria-label="Heure de branchement" hidden>
+        <button type="button" class="start-now" id="btnStartNow" hidden>Maintenant</button>
+      </div>
+
+      <div id="resMark" aria-hidden="true"></div>
+      <div id="resExtra"></div>
+    </section>
+
+  </main>
+
+  <!-- ============ CONFIG VIEW ============ -->
+  <main class="view cfg" id="viewCfg" hidden>
+
+    <div class="cfg-block" style="border-top:0;padding-top:0">
+      <h2>Véhicule</h2>
+      <p>Énergie utilisable de la batterie et pertes entre la borne et les cellules. Ces pertes allongent la recharge&nbsp;: l’énergie dissipée dans le câble, le BMS et la pompe de refroidissement du pack ne fait pas monter l’état de charge. Elles expliquent aussi l’écart entre les kWh facturés et les kWh réellement stockés.</p>
+      <div class="fld"><label for="cUsable">Capacité utilisable (kWh)</label><input type="number" id="cUsable" inputmode="decimal" step="0.5" min="10" max="200"></div>
+      <div class="fld"><label for="cOnboard">Chargeur AC embarqué (kW)</label><input type="number" id="cOnboard" inputmode="decimal" step="0.1" min="1" max="30"></div>
+      <div class="fld"><label for="cAcLoss">Pertes AC (%)</label><input type="number" id="cAcLoss" inputmode="decimal" step="0.5" min="0" max="40"></div>
+      <div class="fld"><label for="cDcLoss">Pertes DC (%)</label><input type="number" id="cDcLoss" inputmode="decimal" step="0.5" min="0" max="40"></div>
+    </div>
+
+    <div class="cfg-block">
+      <h2>Bornes</h2>
+      <p>Puissance nominale et facteur réel. Le facteur réel traduit ce que la borne livre vraiment&nbsp;: tension réseau, câble, plafonnement sous le nominal.</p>
+      <table>
+        <thead><tr><th>Borne</th><th>Nominal kW</th><th>Facteur</th></tr></thead>
+        <tbody id="tbPresets"></tbody>
+      </table>
+    </div>
+
+    <div class="cfg-block">
+      <h2>Courbe DC</h2>
+      <p>Puissance acceptée par l’auto selon l’état de charge, sur borne non limitante et batterie tempérée.</p>
+      <table>
+        <thead><tr><th>Plage SOC</th><th>kW</th></tr></thead>
+        <tbody id="tbCurve"></tbody>
+      </table>
+    </div>
+
+    <div class="cfg-block">
+      <h2>Température</h2>
+      <p>Sur DC&nbsp;: un facteur multiplie la courbe, un plafond la coupe (vide = aucun plafond). Sur AC, seul le facteur s’applique.</p>
+      <table>
+        <thead><tr><th>Condition</th><th>Fact. DC</th><th>Plafond</th><th>Fact. AC</th></tr></thead>
+        <tbody id="tbTemps"></tbody>
+      </table>
+    </div>
+
+    <div class="cfg-block">
+      <h2>Circuit électrique</h2>
+      <p>Seuil au-delà duquel un avertissement s’affiche sur les bornes rapides du Circuit électrique.</p>
+      <div class="fld"><label for="cLimit">Seuil d’avertissement (%)</label><input type="number" id="cLimit" inputmode="numeric" step="1" min="50" max="100"></div>
+    </div>
+
+    <div class="cfg-actions">
+      <button type="button" class="btn btn-accent" id="btnBack">Terminé</button>
+      <button type="button" class="btn" id="btnExport">Exporter</button>
+      <button type="button" class="btn" id="btnImport">Importer</button>
+      <button type="button" class="btn" id="btnReset">Réinitialiser</button>
+      <input type="file" id="fileImport" accept="application/json,.json" hidden>
+    </div>
+    <p class="saved" id="cfgMsg"></p>
+
+    <p class="foot">
+      Les réglages sont conservés sur cet appareil uniquement.<br>
+      Modèle basé sur une Polestar 2 2021 Long Range Dual Motor&nbsp;— les estimations restent des estimations.
+    </p>
+  </main>
+
+</div>
+
+<div class="dock" id="dock" hidden>
+  <div class="dock-in">
+    <span class="dock-d" id="dockDur"></span>
+    <span class="dock-b" id="dockBack"></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   Défauts
+   ========================================================= */
+const DEFAULTS = {
+  // Pertes DC déduites de la session du 29 juillet : la borne a compté 28,686 kWh pour
+  // faire passer l'auto de 63 % à 87 %, soit 0,809 kWh par point d'état de charge. Avec
+  // les 75 kWh utiles de la LR DM, il s'en perd 7,2 % entre la borne et les cellules.
+  battery: { usableKwh: 75, onboardAcKw: 11, acLoss: 0.10, dcLoss: 0.07 },
+
+  // Courbe de charge DC : puissance acceptée par l'auto, borne >=150 kW, batterie tempérée
+  curve: [
+    { from: 0,  to: 30,  kw: 150 },
+    { from: 30, to: 50,  kw: 120 },
+    { from: 50, to: 65,  kw: 95  },
+    { from: 65, to: 75,  kw: 70  },
+    // 75-85 % : non mesuré. La borne 50 kW plafonnait avant que l'auto ne bride, donc
+    // la mesure ne donne qu'une borne inférieure (≥ 52 kW). Valeur tirée de la courbe
+    // publiée pour la LR DM.
+    { from: 75, to: 85,  kw: 55  },
+    // 85-90 % : mesuré à 86 %, 72 A × 445 V = 32,0 kW au port de charge. Avec le
+    // facteur 0,95 du cran « Frais », 34 kW redonne 32,3 kW.
+    { from: 85, to: 90,  kw: 34  },
+    { from: 90, to: 100, kw: 12  }
+  ],
+
+  presets: [
+    { id:'home',    name:'Maison',   sub:'Niveau 2 · 48 A', type:'ac', kw:11,  real:0.95 },
+    { id:'cabin',   name:'Chalet',   sub:'120 V',           type:'ac', kw:1.2, real:0.85, lowVoltage:true },
+    // Hors de chez soi, ce qui distingue une borne c'est sa puissance, pas son nom :
+    // `leadPower` met les kW en tête et renvoie l'exploitant en seconde ligne.
+    { id:'ce-l2',   name:'CE — L2',  sub:'Niveau 2 public', type:'ac', kw:7.2, real:0.95, leadPower:true },
+    // BRCC 50 : deux relevés sur la même session, à 58 % puis à 73 % de charge —
+    // 120 A × 411 V = 49,32 kW, puis 114 A × 433 V = 49,36 kW. La borne tient une
+    // puissance constante pendant que la tension du pack monte, à 0,987 du nominal.
+    // 0,98 garde un cheveu de marge pour les bornes qui plafonnent plus bas.
+    { id:'brcc50',  name:'CE — BRCC', sub:'50 kW',          type:'dc', kw:50,  real:0.98, ceFast:true, leadPower:true },
+    // 100 et 180 kW : non mesurés. Relevés au même titre que le 50, mais avec plus
+    // de marge — le sous-régime est plus fréquent sur les bornes de forte puissance.
+    { id:'brcc100', name:'CE — BRCC', sub:'100 kW',         type:'dc', kw:100, real:0.90, ceFast:true, leadPower:true, splittable:true, splitRatio:0.5 },
+    { id:'brcc180', name:'CE — BRCC', sub:'180 kW',         type:'dc', kw:180, real:0.90, ceFast:true, leadPower:true, splittable:true, splitRatio:0.5 }
+  ],
+
+  temps: [
+    { id:'summer',  label:'Été',        range:'> 15 °C',      dcFactor:1.00, dcCap:null, acFactor:1.00 },
+    // À 14 °C, l'auto tirait toute la puissance de la borne : aucun bridage visible.
+    // La mesure ne prouve pas l'absence totale de bridage — la borne était le facteur
+    // limitant — mais elle exclut le −10 % qui était appliqué ici.
+    { id:'cool',    label:'Frais',      range:'5 à 15 °C',    dcFactor:0.95, dcCap:null, acFactor:1.00 },
+    // Le plafond de 70 kW ne mord pas sur une borne 50 kW : sans facteur, « Froid »
+    // ressortait plus rapide que « Frais ». Le facteur rétablit l'ordre entre les crans.
+    { id:'cold',    label:'Froid',      range:'−10 à 5 °C',   dcFactor:0.85, dcCap:70,   acFactor:0.90 },
+    { id:'vcold',   label:'Très froid', range:'−20 à −10 °C', dcFactor:1.00, dcCap:40,   acFactor:0.75 },
+    { id:'extreme', label:'Extrême',    range:'< −20 °C',     dcFactor:1.00, dcCap:25,   acFactor:0.60, kills120:true }
+  ],
+
+  ceWarnSoc: 90,
+  preheatShift: 2   // nombre de crans de température regagnés par le préchauffage (DC seulement)
+};
+
+const MIN_KW = 0.2;          // sous ce seuil, la charge nette est considérée nulle
+// La clé passe à v2 avec la révision du modèle de charge : `saveConfig` sérialise la
+// configuration entière, donc une config sauvegardée fige aussi les valeurs jamais
+// touchées et masquerait les nouveaux défauts. Changer de clé les laisse repasser.
+const STORE_CFG = 'recharge.config.v2';
+const STORE_UI  = 'recharge.ui.v1';
+
+/* =========================================================
+   Configuration : chargement / sauvegarde
+   ========================================================= */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+function loadConfig(){
+  const cfg = clone(DEFAULTS);
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem(STORE_CFG) || 'null'); } catch(e){ raw = null; }
+  if (raw) mergeConfig(cfg, raw);
+  return cfg;
+}
+
+// Fusion prudente : on ne reprend que les valeurs numériques connues, jamais la structure
+function mergeConfig(cfg, raw){
+  if (raw.battery){
+    ['usableKwh','onboardAcKw','acLoss','dcLoss'].forEach(k=>{
+      if (isNum(raw.battery[k])) cfg.battery[k] = raw.battery[k];
+    });
+  }
+  if (Array.isArray(raw.curve)){
+    cfg.curve.forEach((seg,i)=>{ if (raw.curve[i] && isNum(raw.curve[i].kw)) seg.kw = raw.curve[i].kw; });
+  }
+  if (Array.isArray(raw.presets)){
+    cfg.presets.forEach(p=>{
+      const r = raw.presets.find(x => x && x.id === p.id);
+      if (!r) return;
+      if (isNum(r.kw)) p.kw = r.kw;
+      if (isNum(r.real)) p.real = r.real;
+      if (isNum(r.splitRatio)) p.splitRatio = r.splitRatio;
+    });
+  }
+  if (Array.isArray(raw.temps)){
+    cfg.temps.forEach(t=>{
+      const r = raw.temps.find(x => x && x.id === t.id);
+      if (!r) return;
+      if (isNum(r.dcFactor)) t.dcFactor = r.dcFactor;
+      if (isNum(r.acFactor)) t.acFactor = r.acFactor;
+      if (isNum(r.dcCap)) t.dcCap = r.dcCap;
+      else if (r.dcCap === null) t.dcCap = null;
+    });
+  }
+  if (isNum(raw.ceWarnSoc)) cfg.ceWarnSoc = raw.ceWarnSoc;
+  if (isNum(raw.preheatShift)) cfg.preheatShift = raw.preheatShift;
+}
+
+function isNum(v){ return typeof v === 'number' && isFinite(v); }
+
+function saveConfig(){
+  try { localStorage.setItem(STORE_CFG, JSON.stringify(cfg)); } catch(e){}
+}
+
+/* =========================================================
+   Modèle de charge
+   ========================================================= */
+
+// Puissance acceptée par l'auto en DC à un état de charge donné
+function curveKw(curve, soc){
+  for (let i = 0; i < curve.length; i++){
+    if (soc >= curve[i].from && soc < curve[i].to) return curve[i].kw;
+  }
+  return curve[curve.length - 1].kw;
+}
+
+// Puissance livrée par la borne, après partage et facteur réel
+function stationKw(preset, split){
+  const ratio = (split && preset.splittable) ? preset.splitRatio : 1;
+  return preset.kw * ratio * preset.real;
+}
+
+// Le préchauffage ne remonte que les plafonds thermiques côté DC
+function dcTemp(tempIdx){
+  const i = ui.preheat ? Math.max(0, tempIdx - cfg.preheatShift) : tempIdx;
+  return cfg.temps[i];
+}
+
+// Puissance effective entrant dans la batterie à un état de charge donné
+function powerAt(soc, preset, tempIdx, split){
+  const pStation = stationKw(preset, split);
+  if (preset.type === 'ac'){
+    const t = cfg.temps[tempIdx];
+    return Math.min(cfg.battery.onboardAcKw, pStation) * t.acFactor;
+  }
+  const t = dcTemp(tempIdx);
+  const pCar = curveKw(cfg.curve, soc) * t.dcFactor;
+  const cap  = isNum(t.dcCap) ? t.dcCap : Infinity;
+  return Math.min(pCar, pStation, cap);
+}
+
+// Intégration numérique par pas de 1 %
+function simulate(from, to, preset, tempIdx, split){
+  const stepKwh = cfg.battery.usableKwh / 100;
+  // Part de la puissance affichée qui atteint réellement les cellules. Ce qui se perd
+  // en route — câble, contacteurs, BMS, pompe de refroidissement du pack — ne fait pas
+  // monter l'état de charge, donc les pertes allongent bel et bien la recharge.
+  const loss = preset.type === 'ac' ? cfg.battery.acLoss : cfg.battery.dcLoss;
+  const yieldRatio = loss < 1 ? 1 - loss : 1;
+  const steps = [];
+  let minutes = 0, kwhBattery = 0;
+
+  // Par froid extrême, le maintien en température absorbe tout ce que le 120 V fournit :
+  // aucun chiffre n'est honnête ici.
+  if (preset.lowVoltage && cfg.temps[tempIdx].kills120){
+    return { dead:true, reason:'lowVoltageCold' };
+  }
+
+  for (let soc = Math.round(from); soc < Math.round(to); soc++){
+    const p = powerAt(soc, preset, tempIdx, split);
+    const pBattery = p * yieldRatio;
+    if (!(pBattery > MIN_KW)) return { dead:true, reason:'lowPower', minPower:p };
+    const m = (stepKwh / pBattery) * 60;
+    minutes += m;
+    kwhBattery += stepKwh;
+    steps.push({ soc:soc, kw:p, minutes:m });
+  }
+
+  const kwhStation = kwhBattery / yieldRatio;
+  return {
+    dead: false,
+    minutes: minutes,
+    kwhBattery: kwhBattery,
+    kwhStation: kwhStation,
+    // Moyenne exprimée côté borne, pour se comparer directement à ce qu'affiche l'auto.
+    avgKw: minutes > 0 ? kwhStation / (minutes / 60) : 0,
+    peakKw: steps.reduce((a,s)=>Math.max(a,s.kw), 0),
+    steps: steps
+  };
+}
+
+// Regroupement des pas par tranche de 10 %
+function bands(steps){
+  const out = [];
+  steps.forEach(s=>{
+    const lo = Math.floor(s.soc / 10) * 10;
+    let b = out[out.length - 1];
+    if (!b || b.lo !== lo){ b = { lo:lo, from:s.soc, to:s.soc, minutes:0 }; out.push(b); }
+    b.to = s.soc + 1;
+    b.minutes += s.minutes;
+  });
+  return out;
+}
+
+const round5 = m => Math.max(5, Math.ceil(m / 5) * 5);
+
+/* =========================================================
+   Formatage
+   ========================================================= */
+// Découpe en jours / heures / minutes. Au-delà de 24 h, les minutes ne veulent plus
+// rien dire : « 2 j 7 h » se lit, « 55 h 12 » demande un calcul.
+function partsOf(min){
+  let t = Math.round(min);
+  let j = Math.floor(t / 1440);
+  let h = Math.round((t - j * 1440) / 60);
+  if (j >= 1 && h === 24){ j += 1; h = 0; }   // l'arrondi peut remplir la journée
+  return { j:j, h:j >= 1 ? h : Math.floor(t / 60), m:t % 60, t:t };
+}
+
+// « 45 min », « 1 h 05 », « 5 h », « 2 j 7 h » — l'unité en petit, le chiffre en grand
+function durationHtml(min){
+  const p = partsOf(min);
+  // L'espace entre les deux nombres est placé dans un <u> : à 72 px, une espace pleine
+  // creuserait un trou. Elle prend ainsi la taille réduite des unités.
+  if (p.j >= 1) return p.j + '<u>j</u>' + (p.h ? '<u> </u>' + p.h + '<u>h</u>' : '');
+  if (p.h === 0) return p.t + '<u>min</u>';
+  if (p.m === 0) return p.h + '<u>h</u>';
+  return p.h + '<u>h</u>' + String(p.m).padStart(2, '0');
+}
+
+function fmtShort(min){
+  const p = partsOf(min);
+  if (p.j >= 1) return p.j + ' j' + (p.h ? ' ' + p.h + ' h' : '');
+  if (p.h === 0) return p.t + ' min';
+  return p.m === 0 ? p.h + ' h' : p.h + ' h ' + String(p.m).padStart(2,'0');
+}
+
+function fmtClock(date){
+  return date.getHours() + ' h ' + String(date.getMinutes()).padStart(2,'0');
+}
+
+const JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet',
+               'août','septembre','octobre','novembre','décembre'];
+
+// Nombre de nuits entre deux instants, en ignorant l'heure. Les dates sont ramenées à
+// minuit avant la soustraction, et l'arrondi absorbe les journées de 23 ou 25 heures
+// des changements d'heure.
+function nuitsEntre(a, b){
+  const ja = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const jb = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((jb - ja) / 86400000);
+}
+
+// Une charge au chalet peut déborder sur plusieurs jours : « 55 h » oblige à compter
+// soi-même. Dès que la fin tombe un autre jour, le jour est nommé.
+function fmtWhen(date, from){
+  const heure = fmtClock(date);
+  const n = nuitsEntre(from || new Date(), date);
+  if (n <= 0) return heure;
+  if (n === 1) return 'demain ' + heure;
+  if (n < 7)   return JOURS[date.getDay()] + ' ' + heure;
+  return JOURS[date.getDay()] + ' ' + date.getDate() + ' ' + MOIS[date.getMonth()] + ', ' + heure;
+}
+
+function fmtNum(v, d){
+  return v.toLocaleString('fr-CA', { minimumFractionDigits:d, maximumFractionDigits:d });
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+/* =========================================================
+   État de l'interface
+   ========================================================= */
+function seasonTempIdx(){
+  const m = new Date().getMonth(); // 0 = janvier
+  if (m === 5 || m === 6 || m === 7 || m === 8) return 0; // juin → septembre
+  if (m === 4 || m === 9) return 1;                       // mai, octobre
+  if (m === 2 || m === 3 || m === 10) return 2;           // mars, avril, novembre
+  return 3;                                               // décembre → février
+}
+
+let cfg = loadConfig();
+
+let ui = {
+  from: 20,
+  to: 80,
+  presetId: 'brcc100',
+  tempIdx: seasonTempIdx(),
+  split: false,
+  preheat: false,
+  // Instant où la charge commence. `null` = maintenant, recalculé en continu. Volontairement
+  // hors du stockage : une heure absolue mémorisée serait périmée à la prochaine ouverture.
+  startAt: null
+};
+
+// Le calcul par défaut répond à « si je branche là, ce sera prêt quand ? ». Fixer une
+// heure de départ répond à « si je branche à telle heure ».
+function startTime(){
+  return ui.startAt != null ? ui.startAt : Date.now();
+}
+
+(function restoreUi(){
+  let s;
+  try { s = JSON.parse(localStorage.getItem(STORE_UI) || 'null'); } catch(e){ s = null; }
+  if (!s) return;
+  if (isNum(s.from)) ui.from = clampInt(s.from, 0, 99);
+  if (isNum(s.to))   ui.to   = clampInt(s.to, 1, 100);
+  if (cfg.presets.some(p => p.id === s.presetId)) ui.presetId = s.presetId;
+  ui.split = !!s.split;
+  ui.preheat = !!s.preheat;
+  // La température se repropose selon la saison si le choix mémorisé date de plus de 24 h
+  if (isNum(s.tempIdx) && s.tempIdx >= 0 && s.tempIdx < cfg.temps.length
+      && isNum(s.tempAt) && (Date.now() - s.tempAt) < 24*3600*1000){
+    ui.tempIdx = s.tempIdx;
+  }
+  if (ui.to <= ui.from) ui.to = Math.min(100, ui.from + 1);
+})();
+
+let tempTouchedAt = 0;
+
+function saveUi(){
+  try {
+    localStorage.setItem(STORE_UI, JSON.stringify({
+      from:ui.from, to:ui.to, presetId:ui.presetId,
+      tempIdx:ui.tempIdx, tempAt:tempTouchedAt,
+      split:ui.split, preheat:ui.preheat
+    }));
+  } catch(e){}
+}
+
+function clampInt(v, lo, hi){ return Math.max(lo, Math.min(hi, Math.round(v))); }
+function preset(){ return cfg.presets.find(p => p.id === ui.presetId) || cfg.presets[0]; }
+
+/* =========================================================
+   Rendu — écran principal
+   ========================================================= */
+const $ = id => document.getElementById(id);
+
+function renderPresets(){
+  $('segPreset').innerHTML = cfg.presets.map(p => {
+    // À la maison ou au chalet, le lieu suffit à identifier la borne. Ailleurs, c'est
+    // la puissance qu'on cherche du regard — elle passe donc en tête.
+    const power  = fmtNum(p.kw, Number.isInteger(p.kw) ? 0 : 1) + ' kW';
+    const lead   = p.leadPower ? power : p.name;
+    const second = p.leadPower ? p.name : p.sub;
+    return '<button type="button" role="button" aria-pressed="' + (p.id === ui.presetId) + '" data-preset="' + esc(p.id) + '">' +
+      '<b>' + esc(lead) + '</b><i>' + esc(second) + '</i>' +
+    '</button>';
+  }).join('');
+}
+
+function renderTemps(){
+  $('segTemp').innerHTML = cfg.temps.map((t,i) =>
+    '<button type="button" role="button" aria-pressed="' + (i === ui.tempIdx) + '" data-temp="' + i + '">' +
+      '<b>' + esc(t.label) + '</b><i>' + esc(t.range) + '</i>' +
+    '</button>'
+  ).join('');
+}
+
+function renderControls(){
+  $('fromVal').innerHTML = ui.from + '<span>%</span>';
+  $('toVal').innerHTML   = ui.to + '<span>%</span>';
+  $('fromRange').value = ui.from;
+  $('toRange').value = ui.to;
+
+  const p = preset();
+
+  const splitOn = !!p.splittable;
+  $('tgSplitWrap').classList.toggle('disabled', !splitOn);
+  $('tgSplit').disabled = !splitOn;
+  $('tgSplit').checked = splitOn && ui.split;
+  $('tgSplitWrap').querySelector('i').textContent = splitOn
+    ? 'Deuxième véhicule branché — ' + fmtNum(p.kw, 0) + ' kW partagés en ' + fmtNum(p.kw * p.splitRatio, 0) + ' kW'
+    : 'Sans effet sur cette borne';
+
+  const preOn = p.type === 'dc';
+  $('tgPreWrap').classList.toggle('disabled', !preOn);
+  $('tgPre').disabled = !preOn;
+  $('tgPre').checked = preOn && ui.preheat;
+  $('tgPreWrap').querySelector('i').textContent = preOn
+    ? 'Navigation lancée vers la borne 20 à 30 min avant'
+    : 'Sans effet en courant alternatif';
+}
+
+function setDock(durHtml, backHtml){
+  $('dockDur').innerHTML = '<span class="dock-k">Temps de charge</span>' + durHtml;
+  $('dockBack').innerHTML = backHtml;
+}
+
+// Ligne du départ : « maintenant » tant qu'aucune heure n'est fixée.
+function renderStart(){
+  const fixe = ui.startAt != null;
+  $('startTxt').textContent = fixe ? fmtWhen(new Date(ui.startAt)) : 'maintenant';
+  $('btnStartNow').hidden = !fixe;
+}
+
+function renderResult(){
+  const p = preset();
+  const hero = $('resHero');
+  const extra = $('resExtra');
+  const t = cfg.temps[ui.tempIdx];
+  const wasOpen = !!extra.querySelector('details[open]');
+
+  renderStart();
+
+  if (ui.to <= ui.from){
+    hero.innerHTML = '<p class="lbl">Résultat</p>' +
+      '<p class="res-none">Cible trop basse</p>' +
+      '<p class="res-sub">La cible doit être au-dessus du niveau actuel.</p>';
+    extra.innerHTML = '';
+    setDock('—', '');
+    return;
+  }
+
+  const sim = simulate(ui.from, ui.to, p, ui.tempIdx, ui.split);
+
+  if (sim.dead){
+    const why = sim.reason === 'lowVoltageCold'
+      ? '<p>Sous ' + esc(t.range.replace('< ', '')) + ', le maintien en température de la batterie consomme à peu près tout ' +
+        'ce que le 120&nbsp;V fournit. Le niveau de charge ne montera pas de façon significative, quelle que soit la durée.</p>' +
+        '<p>Une prise de niveau 2 ou un déplacement vers une borne rapide sont les seules options réalistes.</p>'
+      : '<p>Dans ces conditions, la puissance nette entrant dans la batterie est trop faible pour produire une estimation utile.</p>';
+    hero.innerHTML = '<p class="lbl">Résultat</p><p class="res-none">Aucune estimation fiable</p>';
+    extra.innerHTML = '<div class="note"><b>Charge nette pratiquement nulle</b>' + why + '</div>';
+    setDock('—', '');
+    return;
+  }
+
+  const shown = round5(sim.minutes);
+  const debut = new Date(startTime());
+  const back  = new Date(startTime() + shown * 60000);
+  const quand = fmtWhen(back, debut);
+
+  hero.innerHTML =
+    '<p class="lbl">Résultat</p>' +
+    '<p class="res-dur">' + durationHtml(shown) + '</p>' +
+    '<p class="res-back"><span>Prêt</span>' + esc(quand) + '</p>' +
+    '<p class="res-sub">' + ui.from + ' → ' + ui.to + ' %  ·  ' +
+      fmtNum(sim.kwhBattery, 1) + ' kWh  ·  ' + fmtNum(sim.avgKw, 1) + ' kW en moyenne</p>';
+
+  setDock(durationHtml(shown), '<span>Prêt</span>' + esc(quand));
+
+  let html = '';
+
+  // Règle Circuit électrique au-delà du seuil
+  const limit = cfg.ceWarnSoc;
+  if (p.ceFast && ui.to > limit && ui.from < limit){
+    const simTo90 = simulate(ui.from, limit, p, ui.tempIdx, ui.split);
+    if (!simTo90.dead){
+      const m90 = round5(simTo90.minutes);
+      const extra = Math.max(0, shown - m90);
+      const back90 = new Date(startTime() + m90 * 60000);
+      html += '<div class="note"><b>Au-delà de ' + limit + ' % sur borne rapide</b>' +
+        '<p>La tarification du Circuit électrique pénalise le temps passé au-dessus de ' + limit + ' %, ' +
+        'et l’auto n’accepte plus qu’environ ' + fmtNum(curveKw(cfg.curve, limit), 0) + ' kW à partir de là.</p>' +
+        '<p>Jusqu’à ' + limit + ' %&nbsp;: <span class="num">' + fmtShort(m90) + '</span>, prêt <span class="num">' +
+        esc(fmtWhen(back90, new Date(startTime()))) + '</span>.</p>' +
+        '<p>Surcoût de ' + limit + ' → ' + ui.to + ' %&nbsp;: <span class="num">+ ' + fmtShort(extra) + '</span>.</p>' +
+        '<button type="button" id="btnTo90">Viser ' + limit + ' %</button></div>';
+    }
+  }
+
+  // Détail
+  const p_st = stationKw(p, ui.split);
+  const capTxt = p.type === 'dc'
+    ? (isNum(dcTemp(ui.tempIdx).dcCap) ? fmtNum(dcTemp(ui.tempIdx).dcCap, 0) + ' kW' : 'aucun')
+    : '—';
+
+  html += '<details' + (wasOpen ? ' open' : '') + '><summary>Détail</summary>' +
+    kv('Énergie dans la batterie', fmtNum(sim.kwhBattery, 1) + ' kWh') +
+    kv('Énergie tirée de la borne', fmtNum(sim.kwhStation, 1) + ' kWh') +
+    kv('Puissance moyenne', fmtNum(sim.avgKw, 1) + ' kW') +
+    kv('Puissance maximale atteinte', fmtNum(sim.peakKw, 1) + ' kW') +
+    kv('Puissance livrée par la borne', fmtNum(p_st, 1) + ' kW' + (ui.split && p.splittable ? ' (partagée)' : '')) +
+    kv('Plafond thermique', capTxt) +
+    kv('Durée brute', fmtShort(sim.minutes)) +
+    '<div class="bands"><h4>Par tranche de 10 %</h4>';
+
+  const bs = bands(sim.steps);
+  const maxB = bs.reduce((a,b)=>Math.max(a,b.minutes), 0);
+  bs.forEach(b=>{
+    html += '<div class="band">' +
+      '<span class="band-r">' + b.from + ' → ' + b.to + ' %</span>' +
+      '<span class="band-bar"><i style="width:' + (maxB ? (b.minutes/maxB*100) : 0).toFixed(1) + '%"></i></span>' +
+      '<span class="band-t">' + fmtShort(b.minutes) + '</span></div>';
+  });
+  html += '</div></details>';
+
+  extra.innerHTML = html;
+
+  const b90 = $('btnTo90');
+  if (b90) b90.addEventListener('click', ()=>{ ui.to = limit; commit(); });
+}
+
+function kv(k, v){
+  return '<dl class="kv"><dt>' + k + '</dt><dd>' + v + '</dd></dl>';
+}
+
+/* ---------- Heure de branchement ---------- */
+
+// Une heure saisie désigne la prochaine occurrence : passé aujourd'hui, c'est demain.
+function prochainMoment(h, m){
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  if (d.getTime() < Date.now() - 60000) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+function ouvrirDepart(){
+  const inp = $('startTime');
+  const base = new Date(startTime());
+  inp.value = String(base.getHours()).padStart(2,'0') + ':' + String(base.getMinutes()).padStart(2,'0');
+  inp.hidden = false;
+  $('btnStart').hidden = true;
+  $('btnStart').setAttribute('aria-expanded', 'true');
+  inp.focus();
+  if (typeof inp.showPicker === 'function'){ try { inp.showPicker(); } catch(e){} }
+}
+
+function fermerDepart(){
+  $('startTime').hidden = true;
+  $('btnStart').hidden = false;
+  $('btnStart').setAttribute('aria-expanded', 'false');
+}
+
+$('btnStart').addEventListener('click', ouvrirDepart);
+// L'heure de retour affichée est le point d'accroche le plus naturel pour la corriger.
+$('resHero').addEventListener('click', e=>{ if (e.target.closest('.res-back')) ouvrirDepart(); });
+
+$('startTime').addEventListener('change', ()=>{
+  const v = $('startTime').value;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v);
+  if (m){
+    const hh = +m[1], mm = +m[2];
+    if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60) ui.startAt = prochainMoment(hh, mm);
+  }
+  fermerDepart();
+  window.track?.('recharge-start-set', { mode: 'heure' });
+  commit();
+});
+$('startTime').addEventListener('blur', fermerDepart);
+
+$('btnStartNow').addEventListener('click', ()=>{
+  ui.startAt = null;
+  fermerDepart();
+  window.track?.('recharge-start-set', { mode: 'maintenant' });
+  commit();
+});
+
+// Une estimation vaut d'être comptée quand elle répond à un geste — pas au
+// rendu d'ouverture, déjà couvert par la page vue. Et une seule fois par
+// salve : glisser un curseur appelle commit() cent fois pour une seule
+// question posée à l'app.
+let minuterieEstimation, rendueUneFois = false;
+function marquerEstimation(){
+  clearTimeout(minuterieEstimation);
+  minuterieEstimation = setTimeout(()=>window.track?.('recharge-estimate-run', {}), 1200);
+}
+
+function commit(){
+  if (ui.to <= ui.from) ui.to = Math.min(100, ui.from + 1);
+  renderControls();
+  renderPresets();
+  renderTemps();
+  renderResult();
+  saveUi();
+  if (rendueUneFois) marquerEstimation();
+  rendueUneFois = true;
+}
+
+/* =========================================================
+   Événements — écran principal
+   ========================================================= */
+document.querySelectorAll('.pm button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const d = parseInt(b.dataset.d, 10);
+    if (b.dataset.step === 'from') ui.from = clampInt(ui.from + d, 0, 99);
+    else ui.to = clampInt(ui.to + d, 1, 100);
+    if (ui.to <= ui.from){
+      if (b.dataset.step === 'from') ui.to = Math.min(100, ui.from + 1);
+      else ui.from = Math.max(0, ui.to - 1);
+    }
+    commit();
+  });
+});
+
+$('fromRange').addEventListener('input', e=>{ ui.from = clampInt(+e.target.value, 0, 99); commit(); });
+$('toRange').addEventListener('input',   e=>{ ui.to   = clampInt(+e.target.value, 1, 100); commit(); });
+
+document.querySelectorAll('[data-add]').forEach(b=>{
+  b.addEventListener('click', ()=>{ ui.to = clampInt(ui.to + parseInt(b.dataset.add,10), 1, 100); commit(); });
+});
+document.querySelectorAll('[data-set]').forEach(b=>{
+  b.addEventListener('click', ()=>{ ui.to = parseInt(b.dataset.set,10); commit(); });
+});
+
+$('segPreset').addEventListener('click', e=>{
+  const b = e.target.closest('[data-preset]');
+  if (!b) return;
+  ui.presetId = b.dataset.preset;
+  window.track?.('recharge-preset-select', { preset: ui.presetId });
+  commit();
+});
+
+$('segTemp').addEventListener('click', e=>{
+  const b = e.target.closest('[data-temp]');
+  if (!b) return;
+  ui.tempIdx = parseInt(b.dataset.temp, 10);
+  tempTouchedAt = Date.now();
+  window.track?.('recharge-temp-select', { temp: ui.tempIdx });
+  commit();
+});
+
+$('tgSplit').addEventListener('change', e=>{ ui.split = e.target.checked; commit(); });
+$('tgPre').addEventListener('change',   e=>{ ui.preheat = e.target.checked; commit(); });
+
+/* =========================================================
+   Configuration — rendu et événements
+   ========================================================= */
+function renderCfg(){
+  $('cUsable').value  = cfg.battery.usableKwh;
+  $('cOnboard').value = cfg.battery.onboardAcKw;
+  $('cAcLoss').value  = +(cfg.battery.acLoss * 100).toFixed(1);
+  $('cDcLoss').value  = +(cfg.battery.dcLoss * 100).toFixed(1);
+  $('cLimit').value   = cfg.ceWarnSoc;
+
+  $('tbPresets').innerHTML = cfg.presets.map((p,i)=>
+    '<tr><td>' + esc(p.name + ' · ' + p.sub) + '</td>' +
+    '<td><input type="number" inputmode="decimal" step="0.1" min="0.1" max="400" data-pk="' + i + '" value="' + p.kw + '"></td>' +
+    '<td><input type="number" inputmode="decimal" step="0.01" min="0.1" max="1" data-pr="' + i + '" value="' + p.real + '"></td></tr>'
+  ).join('');
+
+  $('tbCurve').innerHTML = cfg.curve.map((s,i)=>
+    '<tr><td>' + s.from + ' → ' + s.to + ' %</td>' +
+    '<td><input type="number" inputmode="decimal" step="1" min="1" max="400" data-ck="' + i + '" value="' + s.kw + '"></td></tr>'
+  ).join('');
+
+  $('tbTemps').innerHTML = cfg.temps.map((t,i)=>
+    '<tr><td>' + esc(t.label) + '</td>' +
+    '<td><input type="number" inputmode="decimal" step="0.05" min="0.1" max="1" data-td="' + i + '" value="' + t.dcFactor + '"></td>' +
+    '<td><input type="number" inputmode="decimal" step="1" min="1" max="400" data-tc="' + i + '" value="' + (isNum(t.dcCap) ? t.dcCap : '') + '"></td>' +
+    '<td><input type="number" inputmode="decimal" step="0.05" min="0" max="1" data-ta="' + i + '" value="' + t.acFactor + '"></td></tr>'
+  ).join('');
+}
+
+function readNum(el, lo, hi, fallback){
+  const v = parseFloat(String(el.value).replace(',', '.'));
+  if (!isFinite(v)) return fallback;
+  return Math.max(lo, Math.min(hi, v));
+}
+
+// Un seul écouteur pour toute la page de configuration.
+// La valeur normalisée est réécrite dans le champ, sans reconstruire le formulaire.
+$('viewCfg').addEventListener('change', e=>{
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement) || el.type !== 'number') return;
+  const d = el.dataset;
+  let out;
+
+  if (el === $('cUsable'))       out = cfg.battery.usableKwh   = readNum(el, 10, 200, cfg.battery.usableKwh);
+  else if (el === $('cOnboard')) out = cfg.battery.onboardAcKw = readNum(el, 1, 30, cfg.battery.onboardAcKw);
+  else if (el === $('cAcLoss'))  out = +((cfg.battery.acLoss = readNum(el, 0, 40, cfg.battery.acLoss*100) / 100) * 100).toFixed(1);
+  else if (el === $('cDcLoss'))  out = +((cfg.battery.dcLoss = readNum(el, 0, 40, cfg.battery.dcLoss*100) / 100) * 100).toFixed(1);
+  else if (el === $('cLimit'))   out = cfg.ceWarnSoc = Math.round(readNum(el, 50, 100, cfg.ceWarnSoc));
+  else if (d.pk !== undefined)   out = cfg.presets[+d.pk].kw       = readNum(el, 0.1, 400, cfg.presets[+d.pk].kw);
+  else if (d.pr !== undefined)   out = cfg.presets[+d.pr].real     = readNum(el, 0.1, 1, cfg.presets[+d.pr].real);
+  else if (d.ck !== undefined)   out = cfg.curve[+d.ck].kw         = readNum(el, 1, 400, cfg.curve[+d.ck].kw);
+  else if (d.td !== undefined)   out = cfg.temps[+d.td].dcFactor   = readNum(el, 0.1, 1, cfg.temps[+d.td].dcFactor);
+  else if (d.ta !== undefined)   out = cfg.temps[+d.ta].acFactor   = readNum(el, 0, 1, cfg.temps[+d.ta].acFactor);
+  else if (d.tc !== undefined){
+    // Champ vide = aucun plafond thermique
+    const raw = String(el.value).trim();
+    const cap = raw === '' ? null : readNum(el, 1, 400, 1);
+    cfg.temps[+d.tc].dcCap = cap;
+    out = cap === null ? '' : cap;
+  }
+  else return;
+
+  el.value = out;
+  saveConfig();
+  commit();
+  flash('Enregistré');
+});
+
+let flashTimer;
+function flash(msg){
+  const el = $('cfgMsg');
+  el.textContent = msg;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ el.textContent = ''; }, 2000);
+}
+
+let cfgOpen = false;
+
+function showCfg(on){
+  cfgOpen = on;
+  $('viewMain').hidden = on;
+  $('viewCfg').hidden = !on;
+  $('btnCfg').setAttribute('aria-label', on ? 'Fermer la configuration' : 'Configuration');
+  $('btnCfg').querySelector('.i-gear').hidden = on;
+  $('btnCfg').querySelector('.i-close').hidden = !on;
+  if (on){ renderCfg(); window.track?.('recharge-config-open', {}); }
+  syncDock();
+  window.scrollTo(0, 0);
+}
+
+// L'ancre suit le bas du bloc résultat : tant qu'elle est sous le pli,
+// le rappel ancré reste affiché.
+function syncDock(visible){
+  if (visible === undefined) visible = dockWanted;
+  dockWanted = visible;
+  $('dock').hidden = cfgOpen || !visible;
+}
+
+let dockWanted = false;
+
+if ('IntersectionObserver' in window){
+  new IntersectionObserver(entries=>{
+    const e = entries[0];
+    syncDock(!e.isIntersecting && e.boundingClientRect.top > 0);
+  }, { threshold: 0 }).observe($('resMark'));
+} else {
+  const onScroll = ()=>syncDock($('resMark').getBoundingClientRect().top > window.innerHeight);
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+}
+
+$('btnCfg').addEventListener('click', ()=>showCfg(!cfgOpen));
+$('btnBack').addEventListener('click', ()=>showCfg(false));
+
+$('btnReset').addEventListener('click', ()=>{
+  if (!confirm('Réinitialiser tous les réglages aux valeurs par défaut ?')) return;
+  cfg = clone(DEFAULTS);
+  saveConfig();
+  renderCfg();
+  commit();
+  window.track?.('recharge-config-reset', {});
+  flash('Réglages réinitialisés');
+});
+
+$('btnExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'recharge-config.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  window.track?.('recharge-config-export', {});
+  flash('Configuration exportée');
+});
+
+$('btnImport').addEventListener('click', ()=>$('fileImport').click());
+
+$('fileImport').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try {
+      const raw = JSON.parse(String(r.result));
+      const next = clone(DEFAULTS);
+      mergeConfig(next, raw);
+      cfg = next;
+      saveConfig();
+      renderCfg();
+      commit();
+      window.track?.('recharge-config-import', { issue: 'ok' });
+      flash('Configuration importée');
+    } catch(err){
+      window.track?.('recharge-config-import', { issue: 'illisible' });
+      flash('Fichier illisible');
+    }
+    e.target.value = '';
+  };
+  r.readAsText(f);
+});
+
+/* =========================================================
+   Démarrage
+   ========================================================= */
+commit();
+
+// L'heure de retour se recalcule au fil du temps et au retour en avant-plan. Un départ
+// fixé n'a rien à recalculer, et un rafraîchissement pendant la saisie fermerait le champ.
+function rafraichirHeure(){
+  if (ui.startAt != null) return;
+  if (!$('startTime').hidden) return;
+  renderResult();
+}
+setInterval(rafraichirHeure, 30000);
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) rafraichirHeure(); });
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+
+<!-- Mesure d'audience — GoatCounter. Ouvrir la page une fois avec `?owner`
+     marque l'appareil : les visites de Marc-Olivier partent alors sous un
+     chemin préfixé et ne gonflent plus les chiffres du public. -->
+<script>
+  if (new URLSearchParams(location.search).has('owner'))
+    localStorage.setItem('gc-owner','1');
+  window.goatcounter = {
+    path: function(p) {
+      return localStorage.getItem('gc-owner') ? 'owner'+p : p;
+    }
+  };
+</script>
+<script data-goatcounter="https://mobergeron.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<script type="module">
+  import { trackVisit } from './analytics.js';
+  trackVisit('recharge');
+</script>
+</body>
+</html>
