@@ -1,0 +1,485 @@
+{
+ "schema": 4,
+ "id": "recharge",
+ "repo": "Recharge",
+ "name": "Recharge",
+ "one_liner": "Dit dans combien de temps la Polestar sera chargée et à quelle heure revenir la chercher.",
+ "status": "au ralenti",
+ "version": "Page unique (31 juillet)",
+ "posture": {
+  "verdict": "Entretenir",
+  "why": "Le calculateur fait son travail. Rien ne justifie de gros chantiers ; seulement trois petites corrections et une mesure au chalet."
+ },
+ "doing": "Rien en cours. Une heure d'IA suffit pour corriger les trois défauts connus.",
+ "headline": "Stable depuis le 31 juillet. Un défaut sérieux : si le calcul plante, la page garde l'ancien chiffre, qui a l'air juste. La charge lente (maison, chalet) n'a jamais été mesurée.",
+ "resume": [
+  "C'est une page qui calcule sur le téléphone ; rien ne tourne en arrière-plan.",
+  "Réglages de l'auto : l'engrenage en haut à droite.",
+  "À la prochaine charge au chalet : noter le % et les kWh au branchement et au débranchement."
+ ],
+ "links": [
+  {
+   "label": "Ouvrir Recharge",
+   "url": "https://molivierbergeron.github.io/Recharge/",
+   "kind": "app"
+  },
+  {
+   "label": "Statistiques de visite",
+   "url": "https://mobergeron.goatcounter.com/",
+   "kind": "stats"
+  },
+  {
+   "label": "Code sur GitHub",
+   "url": "https://github.com/molivierbergeron/Recharge",
+   "kind": "code"
+  }
+ ],
+ "phases": [
+  {
+   "id": "idee",
+   "name": "Idée",
+   "goal": "Savoir à quelle heure revenir chercher l'auto.",
+   "exit": "Une question, une auto.",
+   "status": "fait",
+   "done_on": "2026-07-28"
+  },
+  {
+   "id": "poc",
+   "name": "Preuve de concept",
+   "goal": "Calculer avec la vraie courbe de charge.",
+   "exit": "Écart de moins de 10 min sur une charge mesurée.",
+   "status": "fait",
+   "done_on": "2026-07-29"
+  },
+  {
+   "id": "proto",
+   "name": "Prototype",
+   "goal": "Page installable sur l'iPhone.",
+   "exit": "Installée.",
+   "status": "fait",
+   "done_on": "2026-07-31"
+  },
+  {
+   "id": "lancement",
+   "name": "Lancement",
+   "goal": "S'en servir à chaque recharge.",
+   "exit": "Utilisée.",
+   "status": "fait",
+   "done_on": "2026-07-31"
+  },
+  {
+   "id": "amelioration",
+   "name": "Amélioration",
+   "goal": "Ne jamais afficher un faux chiffre ; juste aussi en charge lente.",
+   "exit": "Erreurs visibles ; charge lente mesurée.",
+   "status": "en cours",
+   "note": "Aucun travail depuis le 31 juillet."
+  },
+  {
+   "id": "maturite",
+   "name": "Maturité",
+   "goal": "Répondre à « quand brancher ».",
+   "exit": "—",
+   "status": "à venir"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "O1",
+   "title": "Ne jamais se fier à un faux chiffre",
+   "why": "Pour une calculatrice, le pire n'est pas la panne : c'est le mauvais chiffre affiché avec assurance.",
+   "benefit": "fiabilite",
+   "measure": "Une erreur de calcul est visible",
+   "now": "Une erreur laisse l'ancien chiffre à l'écran",
+   "target": "Toute erreur affichée clairement",
+   "strategies": [
+    {
+     "id": "O1.S1",
+     "title": "Corriger les défauts connus",
+     "why": "Trois petits défauts, une seule session.",
+     "state": "active",
+     "initiatives": [
+      {
+       "id": "r-echec",
+       "title": "Afficher clairement une erreur de calcul",
+       "status": "à faire",
+       "owner": "ia",
+       "benefit": "fiabilite",
+       "phase": "amelioration",
+       "effort": "XS",
+       "package": "r-p-menage"
+      },
+      {
+       "id": "r-deploy",
+       "title": "Publier depuis la branche par défaut, quel que soit son nom",
+       "status": "à faire",
+       "owner": "ia",
+       "benefit": "fiabilite",
+       "phase": "amelioration",
+       "effort": "XS",
+       "package": "r-p-menage"
+      },
+      {
+       "id": "r-readme",
+       "title": "Mettre la documentation à jour (8 valeurs périmées)",
+       "status": "à faire",
+       "owner": "ia",
+       "benefit": "fiabilite",
+       "phase": "amelioration",
+       "effort": "S",
+       "package": "r-p-menage"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "title": "Une heure de fin juste au chalet",
+   "why": "La charge rapide est calibrée ; la charge lente repose sur la fiche technique. Au chalet, l'écart peut dépasser une heure.",
+   "benefit": "precision",
+   "measure": "Écart entre l'heure annoncée et la fin réelle en charge lente",
+   "now": "Jamais mesuré",
+   "target": "Moins de 30 minutes",
+   "strategies": [
+    {
+     "id": "O2.S1",
+     "title": "Mesurer une vraie charge lente",
+     "why": "Une seule mesure suffit pour recaler le modèle.",
+     "state": "active",
+     "initiatives": [
+      {
+       "id": "r-pertes",
+       "title": "Noter % et kWh au branchement et au débranchement",
+       "status": "à faire",
+       "owner": "marco",
+       "benefit": "precision",
+       "phase": "amelioration",
+       "effort": "XS",
+       "minutes": 5,
+       "detail": "À la prochaine charge au chalet ou à la maison."
+      },
+      {
+       "id": "r-recale",
+       "title": "Recaler le modèle avec la mesure",
+       "status": "bloqué",
+       "owner": "ia",
+       "benefit": "precision",
+       "phase": "amelioration",
+       "effort": "XS",
+       "blocked_by": "r-pertes"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "title": "Moins de gestes à chaque recharge",
+   "why": "Le niveau actuel change à chaque fois et demande jusqu'à 38 appuis.",
+   "benefit": "experience",
+   "measure": "Appuis pour entrer le niveau actuel",
+   "now": "Jusqu'à 38",
+   "target": "3",
+   "strategies": [
+    {
+     "id": "O3.S1",
+     "title": "Raccourcis de saisie",
+     "why": "Même solution que pour la cible, déjà en place.",
+     "state": "active",
+     "initiatives": [
+      {
+       "id": "r-raccourcis",
+       "title": "Raccourcis +5 / +10 / +20 pour le niveau actuel",
+       "status": "à faire",
+       "owner": "ia",
+       "benefit": "experience",
+       "phase": "amelioration",
+       "effort": "XS",
+       "package": "r-p-menage"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "decisions": [],
+ "packages": [
+  {
+   "id": "r-p-menage",
+   "title": "Corriger les trois défauts et accélérer la saisie",
+   "outcome": "Erreur visible, publication robuste, documentation juste, raccourcis pour le niveau actuel.",
+   "ai_minutes": 45,
+   "review_minutes": 10,
+   "prompt": "Dans le repo Recharge, fais les items 1, 2, 3 et 5 de VISION.md : (1) documentation réalignée sur le modèle en vigueur ; (2) une erreur de calcul s'affiche clairement au lieu de laisser l'ancien chiffre ; (3) publication déclenchée par la branche par défaut sans coder son nom ; (5) raccourcis +5 / +10 / +20 pour le niveau actuel. Montre le rendu sur un écran d'iPhone.",
+   "items": [
+    "r-echec",
+    "r-deploy",
+    "r-readme",
+    "r-raccourcis"
+   ],
+   "when": "Maintenant"
+  }
+ ],
+ "opportunities": [
+  {
+   "title": "Erreur visible + raccourcis + documentation",
+   "value": 3,
+   "effort": "S",
+   "context": "Une seule session",
+   "verdict": "Maintenant",
+   "why": "Règle le seul vrai risque et la plus grosse friction.",
+   "benefit": "fiabilite"
+  },
+  {
+   "title": "Mesurer une charge lente",
+   "value": 2,
+   "effort": "XS",
+   "context": "À la prochaine charge au chalet",
+   "verdict": "Maintenant",
+   "why": "Cinq minutes de notes ; retire l'essentiel de l'incertitude.",
+   "benefit": "precision"
+  },
+  {
+   "title": "Protéger le calcul par des tests",
+   "value": 2,
+   "effort": "M",
+   "context": "Seulement avant de modifier le modèle",
+   "verdict": "Plus tard",
+   "why": "Le modèle ne bouge plus ; les tests servent au prochain changement.",
+   "benefit": "fiabilite"
+  },
+  {
+   "title": "Répondre à « quand brancher pour être prêt à 8 h »",
+   "value": 2,
+   "effort": "M",
+   "context": "Si tu fais le calcul de tête souvent",
+   "verdict": "Plus tard",
+   "why": "Utile au chalet ; pas urgent.",
+   "benefit": "experience"
+  },
+  {
+   "title": "Journal des recharges et capacité réelle",
+   "value": 1,
+   "effort": "L",
+   "context": "Si les mesures ponctuelles ne suffisent pas",
+   "verdict": "Non",
+   "why": "Gros chantier pour un gain que la mesure ponctuelle donne déjà.",
+   "benefit": "precision"
+  },
+  {
+   "title": "Coût de la recharge",
+   "value": 1,
+   "effort": "M",
+   "context": "—",
+   "verdict": "Non",
+   "why": "Ne change pas la décision de brancher.",
+   "benefit": "couts"
+  }
+ ],
+ "next": {
+  "type": "package",
+  "ref": "r-p-menage",
+  "why": "Une session d'IA règle le seul risque sérieux et la plus grosse friction."
+ },
+ "chain": [
+  {
+   "label": "Niveau actuel et borne",
+   "state": "fait",
+   "sub": "saisie en quelques gestes",
+   "note": ""
+  },
+  {
+   "label": "Vraie courbe de charge",
+   "state": "fait",
+   "sub": "Polestar 2, par pas de 1 %",
+   "note": ""
+  },
+  {
+   "label": "Heure de retour",
+   "state": "fait",
+   "sub": "chiffre stable",
+   "note": ""
+  },
+  {
+   "label": "Erreur visible",
+   "state": "manquant",
+   "sub": "un plantage garde l'ancien chiffre",
+   "note": ""
+  },
+  {
+   "label": "Charge lente mesurée",
+   "state": "ensuite",
+   "sub": "maison, chalet",
+   "note": ""
+  },
+  {
+   "label": "Quand brancher",
+   "state": "plus tard",
+   "sub": "calcul inverse",
+   "note": ""
+  }
+ ],
+ "evolutions": [
+  {
+   "id": "re-fiable",
+   "title": "Un chiffre toujours juste ou clairement faux",
+   "pitch": "Plus jamais un ancien chiffre affiché comme s'il était à jour ; saisie en 3 gestes.",
+   "goal": "Ne jamais se fier à un faux chiffre",
+   "benefit": "fiabilite",
+   "value": 3,
+   "sessions": 1,
+   "horizon": "Maintenant",
+   "first_step": "Lancer le lot « Corriger les trois défauts ».",
+   "objective": "O1",
+   "depends": [],
+   "source": "repo",
+   "mode": "ia",
+   "why": "Un faux chiffre affiché avec assurance est pire qu'une panne.",
+   "implies": "Une requête à l'IA ; aucun coût."
+  },
+  {
+   "id": "re-lente",
+   "title": "Juste aussi au chalet",
+   "pitch": "L'heure de fin en charge lente tombe à 30 minutes près.",
+   "goal": "Une heure de fin juste au chalet",
+   "benefit": "precision",
+   "value": 2,
+   "sessions": 1,
+   "horizon": "Ensuite",
+   "first_step": "Noter % et kWh à la prochaine charge au chalet.",
+   "objective": "O2",
+   "depends": [],
+   "source": "repo",
+   "mode": "toi",
+   "why": "Au chalet, l'écart peut dépasser une heure.",
+   "implies": "Noter deux chiffres à ta prochaine charge lente."
+  },
+  {
+   "id": "re-planifier",
+   "title": "Planifier plutôt que calculer",
+   "pitch": "« Je pars à 8 h avec 80 % » → l'app dit quand brancher, et ce que ça coûte selon l'heure.",
+   "goal": "Moins de calcul de tête",
+   "benefit": "experience",
+   "value": 2,
+   "sessions": 3,
+   "horizon": "Plus tard",
+   "first_step": "Valider le besoin : combien de fois par mois fais-tu ce calcul ?",
+   "objective": null,
+   "depends": [
+    "re-lente"
+   ],
+   "source": "Claude",
+   "mode": "ia",
+   "why": "Tu fais ce calcul à l'envers dans ta tête.",
+   "implies": "Nouveau mode de calcul ; à valider selon la fréquence."
+  }
+ ],
+ "plan": {
+  "version": 4,
+  "updated_at": "2026-09-28T01:00",
+  "updated_by": "Claude",
+  "priorities_validated": false,
+  "changes": [
+   {
+    "version": 3,
+    "date": "2026-09-27",
+    "summary": "Analyse produit refaite : cap, objectifs sur mesure, décisions, lots d'une heure, idées triées."
+   },
+   {
+    "version": 4,
+    "date": "2026-09-28",
+    "summary": "Chaîne de valeur et évolutions majeures en séquence (maintenant, ensuite, plus tard)."
+   }
+  ]
+ },
+ "history": [
+  {
+   "date": "2026-08-08",
+   "title": "Corriger la date de l'audit : 8 août, pas 2 août",
+   "pr": null
+  },
+  {
+   "date": "2026-08-08",
+   "title": "Consigner l'audit produit du 2 août",
+   "pr": null
+  },
+  {
+   "date": "2026-07-31",
+   "title": "Recentrer l'interface sur la question réellement posée",
+   "pr": null
+  },
+  {
+   "date": "2026-07-29",
+   "title": "Faire porter les pertes sur le temps de charge, pas seulement sur les kWh",
+   "pr": null
+  },
+  {
+   "date": "2026-07-29",
+   "title": "Affiner le facteur réel de la BRCC 50 sur un second relevé",
+   "pr": null
+  },
+  {
+   "date": "2026-07-29",
+   "title": "Recaler le modèle DC sur une session mesurée à 14 °C",
+   "pr": null
+  },
+  {
+   "date": "2026-07-28",
+   "title": "Nouvelle icône : anneau de charge (piste B)",
+   "pr": 4
+  },
+  {
+   "date": "2026-07-28",
+   "title": "Documenter le déploiement réel et l'adresse en ligne",
+   "pr": null
+  },
+  {
+   "date": "2026-07-28",
+   "title": "Publier sur gh-pages plutôt que via l'artefact Pages",
+   "pr": null
+  },
+  {
+   "date": "2026-07-28",
+   "title": "Publier le site via GitHub Pages",
+   "pr": null
+  },
+  {
+   "date": "2026-07-28",
+   "title": "Estimateur de temps de recharge Polestar 2 (V1)",
+   "pr": null
+  }
+ ],
+ "git": {
+  "_generated": "AUTO — généré par tools/git_facts.py (future Action). Ne pas éditer à la main.",
+  "generated_at": "2026-09-27",
+  "last_commit": {
+   "sha": "2b1c1a6",
+   "date": "2026-09-05",
+   "author": "molivierbergeron",
+   "subject": "Mesure d'audience GoatCounter"
+  },
+  "last_human_commit": {
+   "sha": "2b1c1a6",
+   "date": "2026-09-05",
+   "subject": "Mesure d'audience GoatCounter"
+  },
+  "commits_30d": 1,
+  "human_commits_30d": 1,
+  "auto_commits_30d": 0,
+  "active_days_30d": 1,
+  "human_commits_per_week_8w": [
+   2,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0
+  ],
+  "workflows": [
+   "pages.yml"
+  ]
+ }
+}
