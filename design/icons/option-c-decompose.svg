@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#FAFAF8"/>
+  <!-- éclair tranché : moitié haute -->
+  <path d="M312 110 L204.6 252 L313.4 252 L324 238 L264 238 Z" fill="#1A1A1A"/>
+  <!-- éclair tranché : moitié basse -->
+  <path d="M192.5 268 L188 274 L248 274 L200 402 L301.3 268 Z" fill="#FF7A00"/>
+</svg>

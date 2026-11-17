@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#FAFAF8"/>
+  <!-- arc parcouru (accent) -->
+  <path d="M291.3 89.7 A170 170 0 0 1 382.3 369.7"
+        fill="none" stroke="#FF7A00" stroke-width="9" stroke-linecap="butt"/>
+  <!-- arc restant (encre) -->
+  <path d="M382.3 369.7 A170 170 0 1 1 220.7 89.7"
+        fill="none" stroke="#1A1A1A" stroke-width="9" stroke-linecap="butt"/>
+  <!-- éclair -->
+  <path d="M285.1 180.1 L220.6 265.4 L251.8 265.4 L226.9 331.9 L291.4 246.6 L260.2 246.6 Z"
+        fill="#1A1A1A"/>
+</svg>
